@@ -1,0 +1,23 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 256b4935e637c9a3d3d471e37a11a243358c7c73138585053cf2f7c1ecf9e6d6
+
+name:           p2
+version:        0.0.0
+build-type:     Simple
+
+executable main
+  main-is: Main.hs
+  other-modules:
+      Paths_p2
+  hs-source-dirs:
+      src
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , split >=0.2
+  default-language: Haskell2010
