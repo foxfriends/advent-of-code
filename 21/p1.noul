@@ -1,0 +1,28 @@
+monkeys := {};
+
+while (1) (
+    line := input();
+    if (not line) break;
+    [name, job] := line[:-1] split ":" map strip;
+    try (
+        monkeys[name] = int(job);
+    ) catch e -> (
+        monkeys[name] = job;
+    )
+);
+
+queue := ["root"];
+
+while (len(queue)) (
+    current := pop queue;
+    switch (monkeys[current])
+        case n: int -> null
+        case s: str -> (
+            [l, o, r] := s.words;
+            queue ++= [current, l, r];
+            monkeys[current] = [l, o, r];
+        )
+        case [l, o, r] -> (monkeys[current] = eval(monkeys[l] $ o $ monkeys[r]))
+);
+
+print(monkeys["root"])

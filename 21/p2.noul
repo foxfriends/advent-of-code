@@ -1,0 +1,74 @@
+monkeys := {};
+
+while (1) (
+    line := input();
+    if (not line) break;
+    [name, job] := line[:-1] split ":" map strip;
+    if (name == "root") (
+        [l, _, r] := job.words;
+        monkeys[name] = [l, r];
+    ) else if (name == "humn") (
+        monkeys[name] = null;
+    ) else (
+        try (
+            monkeys[name] = int(job);
+        ) catch e -> (
+            monkeys[name] = job;
+        )
+    )
+);
+
+queue := [monkeys["root"][0], monkeys["root"][1]];
+humans := {};
+
+inverse := \c, l, op, r -> switch ([l, op, r])
+    case [null, "-", x] -> [c, "+", x]
+    case [x, "-", null] -> [x, "-", c]
+    case [null, "+", x] -> [c, "-", x]
+    case [x, "+", null] -> [c, "-", x]
+    case [null, "*", x] -> [c, "/", x]
+    case [x, "*", null] -> [c, "/", x]
+    case [null, "/", x] -> [c, "*", x]
+    case [x, "/", null] -> [x, "/", c];
+
+while (len(queue) > 0) (
+    current := pop queue;
+    switch (monkeys[current])
+        case null -> null
+        case n: int -> null
+        case s: str -> (
+            [l, o, r] := s.words;
+            queue ++= [current, l, r];
+            monkeys[current] = [l, o, r];
+        )
+        case [l, o, r] -> (
+            if (monkeys[l] == null or monkeys[r] == null) (
+                humans[l] = inverse(current, monkeys[l], o, monkeys[r]);
+                humans[r] = inverse(current, monkeys[l], o, monkeys[r]);
+            );
+            monkeys[current] = if (monkeys[l] == null or monkeys[r] == null) null else eval(monkeys[l] $ o $ monkeys[r]);
+        )
+);
+
+every humans[monkeys["root"][0]], humans[monkeys["root"][1]] = monkeys[monkeys["root"][1]] coalesce monkeys[monkeys["root"][0]];
+
+queue = ["humn"];
+
+while (len(queue) > 0) (
+    current := pop queue;
+    switch (humans[current])
+        case n: int -> null
+        case [l, o, r] -> (
+            queue +.= current;
+            if (l is str) ( queue +.= l );
+            if (r is str) ( queue +.= r );
+            humans[current] = [[l, o, r]]; # weird, but whatever
+        )
+        case [[l, o, r]] -> (
+            ls := if (l is str) humans[l] else l;
+            rs := if (r is str) humans[r] else r;
+            humans[current] = eval(ls $ o $ rs);
+        )
+);
+
+print(humans["humn"]);
