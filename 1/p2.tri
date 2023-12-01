@@ -1,0 +1,43 @@
+module io at "trilogy:io"
+module iter at "trilogy:iter"
+module num at "trilogy:num"
+module str at "trilogy:str"
+
+func combine [a] = $"${str::cast a}${str::cast a}"
+func combine [a, .._, b] = $"${str::cast a}${str::cast b}"
+
+func digits "" = []
+func digits s =
+    match extract s
+        case 'some(d) then [d, ..digits (str::skip 1 s)]
+        else digits (str::skip 1 s)
+
+func extract "0" <> _ = 'some(0)
+func extract "1" <> _ = 'some(1)
+func extract "one" <> _ = 'some(1)
+func extract "2" <> _ = 'some(2)
+func extract "two" <> _ = 'some(2)
+func extract "3" <> _ = 'some(3)
+func extract "three" <> _ = 'some(3)
+func extract "4" <> _ = 'some(4)
+func extract "four" <> _ = 'some(4)
+func extract "5" <> _ = 'some(5)
+func extract "five" <> _ = 'some(5)
+func extract "6" <> _ = 'some(6)
+func extract "six" <> _ = 'some(6)
+func extract "7" <> _ = 'some(7)
+func extract "seven" <> _ = 'some(7)
+func extract "8" <> _ = 'some(8)
+func extract "eight" <> _ = 'some(8)
+func extract "9" <> _ = 'some(9)
+func extract "nine" <> _ = 'some(9)
+func extract _ = 'none
+
+proc main!() {
+    let total = io::readlines
+        |> iter::map digits
+        |> iter::map combine
+        |> iter::map (num::cast)
+        |> iter::reduce (+)
+    io::println!(total)
+}
