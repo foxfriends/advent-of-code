@@ -1,7 +1,7 @@
-module io at "trilogy:io"
-module iter at "trilogy:iter"
+module io at "trilogy:io" use readlines, println
+module iter at "trilogy:iter" use map, reduce
 module num at "trilogy:num"
-module str at "trilogy:str"
+module str at "trilogy:str" use skip
 
 func combine [a] = $"${str::cast a}${str::cast a}"
 func combine [a, .._, b] = $"${str::cast a}${str::cast b}"
@@ -9,8 +9,8 @@ func combine [a, .._, b] = $"${str::cast a}${str::cast b}"
 func digits "" = []
 func digits s =
     match extract s
-        case 'some(d) then [d, ..digits (str::skip 1 s)]
-        else digits (str::skip 1 s)
+        case 'some(d) then [d, ..digits (skip 1 s)]
+        else digits (skip 1 s)
 
 func extract "0" <> _ = 'some(0)
 func extract "1" <> _ = 'some(1)
@@ -34,10 +34,10 @@ func extract "nine" <> _ = 'some(9)
 func extract _ = 'none
 
 proc main!() {
-    let total = io::readlines
-        |> iter::map digits
-        |> iter::map combine
-        |> iter::map (num::cast)
-        |> iter::reduce (+)
-    io::println!(total)
+    let total = readlines
+        |> map digits
+        |> map combine
+        |> map (num::cast)
+        |> reduce (+)
+    println!(total)
 }

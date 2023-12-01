@@ -1,7 +1,7 @@
-module io at "trilogy:io"
-module iter at "trilogy:iter"
+module io at "trilogy:io" use readlines, println
+module iter at "trilogy:iter" use map, of, filter, collect, reduce
 module num at "trilogy:num"
-module str at "trilogy:str"
+module str at "trilogy:str" use chars
 module array at "trilogy:array"
 
 func is_digit '0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9' = true
@@ -11,15 +11,15 @@ func combine [a] = $"${str::cast a}${str::cast a}"
 func combine [a, .._, b] = $"${str::cast a}${str::cast b}"
 
 proc main!() {
-    let total = io::readlines
-        |> iter::map (
-            str::chars
-            >> iter::of
-            >> iter::filter is_digit
-            >> iter::collect array
+    let total = readlines
+        |> map (
+            chars
+            >> of
+            >> filter is_digit
+            >> collect array
         )
-        |> iter::map combine
-        |> iter::map (num::cast)
-        |> iter::reduce (+)
-    io::println!(total)
+        |> map combine
+        |> map (num::cast)
+        |> reduce (+)
+    println!(total)
 }
