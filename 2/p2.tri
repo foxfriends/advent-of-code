@@ -28,7 +28,7 @@ proc main!() {
                 split ", "
                 >> map (draw_pattern::matches)
             )
-            |> fold (fn x. max_color x) {| ..init |}
+            |> fold max_color {| ..init |}
             |> power
     }
     println!(total)

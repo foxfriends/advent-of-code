@@ -19,7 +19,7 @@ proc main!() {
             |> all (
                 split ", "
                 >> map (draw_pattern::matches)
-                >> all (fn x. valid x)
+                >> all valid
             )
         if game_valid {
             total += cast game.1
