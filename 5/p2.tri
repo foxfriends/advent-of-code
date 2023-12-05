@@ -1,0 +1,49 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp
+module array at "trilogy:array" use map, flatmap, fold, first
+module num at "trilogy:num" use cast
+module regex at "trilogy:regex"
+module record at "trilogy:record"
+module iter at "trilogy:iter" use collect, of
+module range at "trilogy:range" use overlap, non_overlap, shift
+
+const heading_regex = regex::new "(\\w+)-to-(\\w+) map:"
+func parse_section [heading, ..ranges] =
+    let {| 1 => from, 2 => to, .._ |} = heading_regex::matches heading,
+    let parsed_ranges = map (str::split " " >> map cast) ranges,
+    from:{| 'to => to, 'ranges => parsed_ranges |}
+
+func map_range dest src len [lo, rlen] =
+    let mapped = overlap (src:src+len) (lo:lo+rlen) |> shift (dest - src)
+    mapped:non_overlap (src:src+len) (lo:lo+rlen)
+
+
+func map_ranges [] vals = vals
+func map_ranges [[dest, src, len], ..ranges] [val, ..vals] =
+    with map_range dest src len val
+        when 'disjoint cancel map_ranges ranges [val, vals]
+        else yield
+        case mapped:unmapped then 
+        case unit then map_ranges ranges [val, vals]
+
+
+func map_to dest dest _ ranges = ranges
+func map_to dest src maps ranges = map_to dest (maps.src.'to) maps <| map_ranges (maps.src.'ranges) ranges
+
+proc main!() {
+    let [seeds_line, _, ..lines] = [chomp line for line in readlines!()]
+    let seed_ranges = seeds_line
+        |> str::skip 7
+        |> str::split " "
+        |> array::map cast
+        |> array::chunks 2
+    let maps = lines
+        |> array::split (str::is_empty)
+        |> map parse_section
+        |> (collect record << of)
+    let closest = seed_ranges
+        |> flatmap (fn x. map_to "location" "seed" maps [x])
+        |> map first
+        |> fold (fn x y. if x < y == true then x else y) unit
+    println!(closest)
+}
