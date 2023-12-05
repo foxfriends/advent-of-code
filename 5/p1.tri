@@ -1,0 +1,38 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp
+module array at "trilogy:array" use map, fold
+module num at "trilogy:num" use cast
+module regex at "trilogy:regex"
+module record at "trilogy:record"
+module iter at "trilogy:iter" use collect, of
+
+const heading_regex = regex::new "(\\w+)-to-(\\w+) map:"
+func parse_section [heading, ..ranges] =
+    let {| 1 => from, 2 => to, .._ |} = heading_regex::matches heading,
+    let parsed_ranges = map (str::split " " >> map cast) ranges,
+    from:{| 'to => to, 'ranges => parsed_ranges |}
+
+func map_range [] val = val
+func map_range [[dest, src, len], ..ranges] val =
+    if val >= src && val < src + len
+    then dest + val - src
+    else map_range ranges val
+
+func map_to dest dest _ val = val
+func map_to dest src maps val = map_to dest (maps.src.'to) maps <| map_range (maps.src.'ranges) val
+
+proc main!() {
+    let [seeds_line, _, ..lines] = [chomp line for line in readlines!()]
+    let seeds = seeds_line
+        |> str::skip 7
+        |> str::split " "
+        |> array::map cast
+    let maps = lines
+        |> array::split (str::is_empty)
+        |> map parse_section
+        |> (collect record << of)
+    let closest = seeds
+        |> map (map_to "location" "seed" maps)
+        |> fold (fn x y. if x < y == true then x else y) unit
+    println!(closest)
+}
