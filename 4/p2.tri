@@ -19,7 +19,7 @@ proc main!() {
         |> collect array
     let counts = [1 for _ in scores]
     for i : score in (of scores |> enumerate)!()
-    and n in (range (i + 1) (i + score))!() {
+    and n in range (i + 1) (i + score) {
         with { counts . n += counts . i }
             when 'MIA cancel unit
             else yield
