@@ -1,34 +1,40 @@
 module io at "trilogy:io" use println, readlines
 module str at "trilogy:str" use chomp
-module array at "trilogy:array" use map, flatmap, fold, first
+module array at "trilogy:array" use map, flatmap, fold, filter
 module num at "trilogy:num" use cast
 module regex at "trilogy:regex"
 module record at "trilogy:record"
 module iter at "trilogy:iter" use collect, of
-module range at "trilogy:range" use overlap, non_overlap, shift
+module range at "trilogy:range" use is_overlapping, overlap, subtract, shift
+module tuple at "trilogy:tuple" use fst
+
+func parse_range range = range
+    |> str::split " "
+    |> map cast
+    |> (fn [dest, src, len]. dest - src : src : src + len)
 
 const heading_regex = regex::new "(\\w+)-to-(\\w+) map:"
 func parse_section [heading, ..ranges] =
     let {| 1 => from, 2 => to, .._ |} = heading_regex::matches heading,
-    let parsed_ranges = map (str::split " " >> map cast) ranges,
+    let parsed_ranges = map parse_range ranges,
     from:{| 'to => to, 'ranges => parsed_ranges |}
 
-func map_range dest src len [lo, rlen] =
-    let mapped = overlap (src:src+len) (lo:lo+rlen) |> shift (dest - src)
-    mapped:non_overlap (src:src+len) (lo:lo+rlen)
-
+func map_range offset src_range range =
+    range
+    |> overlap src_range
+    |> shift offset
 
 func map_ranges [] vals = vals
-func map_ranges [[dest, src, len], ..ranges] [val, ..vals] =
-    with map_range dest src len val
-        when 'disjoint cancel map_ranges ranges [val, vals]
-        else yield
-        case mapped:unmapped then 
-        case unit then map_ranges ranges [val, vals]
-
+func map_ranges [offset : src_range, ..ranges] vals =
+    let mapped = vals
+        |> filter (is_overlapping src_range)
+        |> map (map_range offset src_range),
+    [..mapped, ..map_ranges ranges (flatmap (fn val. subtract val src_range) vals)]
 
 func map_to dest dest _ ranges = ranges
-func map_to dest src maps ranges = map_to dest (maps.src.'to) maps <| map_ranges (maps.src.'ranges) ranges
+func map_to dest src maps ranges = ranges
+    |> map_ranges (maps.src.'ranges)
+    |> map_to dest (maps.src.'to) maps
 
 proc main!() {
     let [seeds_line, _, ..lines] = [chomp line for line in readlines!()]
@@ -37,13 +43,13 @@ proc main!() {
         |> str::split " "
         |> array::map cast
         |> array::chunks 2
+        |> map (fn [lo, len]. lo:lo + len)
     let maps = lines
         |> array::split (str::is_empty)
         |> map parse_section
         |> (collect record << of)
-    let closest = seed_ranges
-        |> flatmap (fn x. map_to "location" "seed" maps [x])
-        |> map first
+    let closest = map_to "location" "seed" maps seed_ranges
+        |> map fst
         |> fold (fn x y. if x < y == true then x else y) unit
     println!(closest)
 }
