@@ -1,7 +1,7 @@
 module io at "trilogy:io" use println, readline
 module str at "trilogy:str" use split, chomp, joined
-module array at "trilogy:array" use filter, length, zip, map, fold
-module iter at "trilogy:iter" use rangex, of, collect
+module array at "trilogy:array" use filter
+module iter at "trilogy:iter" use of, collect
 module num at "trilogy:num" use cast
 
 func parse "Time:" <> s = parse s
