@@ -1,0 +1,33 @@
+module io at "trilogy:io" use println, readline
+module str at "trilogy:str" use split, chomp, joined
+module array at "trilogy:array" use filter, length, zip, map, fold
+module iter at "trilogy:iter" use rangex, of, collect
+module num at "trilogy:num" use cast
+
+func parse "Time:" <> s = parse s
+func parse "Distance:" <> s = parse s
+func parse s = s |> split " " |> filter ((!=) "") |> of |> collect (joined "") |> num::cast
+
+func check op t d i = op (i * (t - i)) d
+
+func race_up t d i n =
+    if check (>) t d i && check (<) t d (i - 1)
+    then i
+    else if check (>) t d i
+    then race_up t d (i - (t // 2 ** n)) (n + 1)
+    else race_up t d (i + (t // 2 ** n)) (n + 1)
+
+func race_down t d i n =
+    if check (>) t d i && check (<) t d (i + 1)
+    then i
+    else if check (<) t d i
+    then race_down t d (i - (t // 2 ** n)) (n + 1)
+    else race_down t d (i + (t // 2 ** n)) (n + 1)
+
+func race t d = race_down t d t 1 - race_up t d 0 1
+
+proc main!() {
+    let t = readline!() |> chomp |> parse
+    let d = readline!() |> chomp |> parse
+    println!(race t d + 1)
+}
