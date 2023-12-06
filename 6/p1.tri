@@ -1,0 +1,21 @@
+module io at "trilogy:io" use println, readline
+module str at "trilogy:str" use split, chomp
+module array at "trilogy:array" use filter, length, zip, map, fold
+module iter at "trilogy:iter" use rangex
+module num at "trilogy:num" use cast
+
+func parse "Time:" <> s = parse s
+func parse "Distance:" <> s = parse s
+func parse s = s |> split " " |> filter ((!=) "") |> map <| num::cast
+
+func race time:distance =
+    length [t for t in rangex 1 time and is t * (time - t) > distance]
+
+proc main!() {
+    let times = readline!() |> chomp |> parse
+    let distances = readline!() |> chomp |> parse
+    let total = zip times distances
+        |> map race
+        |> fold (*) 1
+    println!(total)
+}
