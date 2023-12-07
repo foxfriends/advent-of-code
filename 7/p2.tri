@@ -5,14 +5,15 @@ module str at "trilogy:str" use take, skip, chars
 module num at "trilogy:num" use cast
 module tuple at "trilogy:tuple" use fst, mapfst
 
+func occurrences arr 'J' = 5
 func occurrences arr v = length [1 for ^v in arr]
 
-func rank [a, a, a, a, a] = 1
-func rank [a, a, a, a, b] = 2
-func rank [a, a, a, b, b] = 3
-func rank [a, a, a, b, c] = 4
-func rank [a, a, b, b, c] = 5
-func rank [a, a, b, c, d] = 6
+func rank ['J' or a, 'J' or a, 'J' or a, 'J' or a, 'J' or a] = 1
+func rank ['J' or a, 'J' or a, 'J' or a, 'J' or a, b] = 2
+func rank ['J' or a, 'J' or a, 'J' or a, b, b] = 3
+func rank ['J' or a, 'J' or a, 'J' or a, b, c] = 4
+func rank ['J' or a, 'J' or a, b, b, c] = 5
+func rank ['J' or a, 'J' or a, b, c, d] = 6
 func rank _ = 7
 
 func asc prop a b = prop a <= prop b
@@ -23,7 +24,7 @@ func parse line <> "\n" = (take 5 line |> chars) : (skip 6 line |> cast)
 func card_score 'A' = 14
 func card_score 'K' = 13
 func card_score 'Q' = 12
-func card_score 'J' = 11
+func card_score 'J' = 1
 func card_score 'T' = 10
 func card_score '9' = 9
 func card_score '8' = 8
@@ -39,7 +40,8 @@ proc main!() {
         |> iter::map parse
         |> iter::collect array
         |> sort (asc (fst >> map card_score))
-        |> map (mapfst ((fn hand. sort (>=) hand |> sort (desc (occurrences hand))) >> rank))
+        |> map (mapfst (fn hand. sort (>=) hand |> sort (desc (occurrences hand))))
+        |> map (mapfst rank)
         |> sort (desc fst)
         |> iter::of
         |> iter::enumerate
