@@ -4,7 +4,6 @@ module iter at "trilogy:iter" use of, map, collect
 module record at "trilogy:record"
 module array at "trilogy:array" use length
 module tuple at "trilogy:tuple" use fst, snd
-module time at "trilogy:time" use instant, fmt_ns
 
 func parse_node line =
     slice 0 3 line : slice 7 3 line : slice 12 3 line
@@ -12,20 +11,14 @@ func parse_node line =
 func go 'L' = fst
 func go 'R' = snd
 
+func distance _ _ dist dest dest = dist
+func distance dirs graph dist dest src = graph . src
+    |> go (dirs . (dist % length dirs))
+    |> distance dirs graph (dist + 1) dest
+
 proc main!() {
-    let [mut directions, _, ..nodes] = [chomp line for line in readlines!() and is line != ""];
+    let [directions, _, ..nodes] = [chomp line for line in readlines!() and is line != ""];
     let dirs = chars directions
     let graph = of nodes |> map parse_node |> collect record
-    let travel = fn d p. go d (graph . p)
-
-    let mut position = "AAA"
-    let mut distance = 0
-    while position != "ZZZ" {
-        let dist = distance % length dirs
-        let dir = dirs . dist
-        position travel= dir
-        distance += 1
-    }
-
-    println!(distance)
+    println!(distance dirs graph 0 "ZZZ" "AAA")
 }
