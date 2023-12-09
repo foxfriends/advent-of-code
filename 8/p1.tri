@@ -4,7 +4,6 @@ module iter at "trilogy:iter" use of, map, collect
 module record at "trilogy:record"
 module array at "trilogy:array" use length
 module tuple at "trilogy:tuple" use fst, snd
-module time at "trilogy:time" use instant, fmt_ns
 
 func parse_node line =
     slice 0 3 line : slice 7 3 line : slice 12 3 line
