@@ -2,7 +2,8 @@ module io at "trilogy:io" use println, readlines
 module str at "trilogy:str" use chomp, chars, slice
 module iter at "trilogy:iter" use of, map, collect, filter
 module record at "trilogy:record" use keys
-module array at "trilogy:array" use length, all, push
+module num at "trilogy:num" use lcm
+module array at "trilogy:array" use length, push, fold
 module tuple at "trilogy:tuple" use fst, snd
 
 func parse_node line =
@@ -17,13 +18,29 @@ func is_start _ = false
 func is_end _ <> "Z" = true
 func is_end _ = false
 
-proc main!() {
-    let [mut directions, _, ..nodes] = [chomp line for line in readlines!() and is line != ""];
-    let dirs = chars directions
-    let graph = of nodes
-        |> map parse_node
-        |> collect record
+proc cycle!(dirs, graph, start) {
     let travel = fn d p. go d (graph . p)
+    let len = length dirs
+    let mut buckets = [[] for _ in dirs]
+    let mut position = start
+    let mut distance = 0
+    while true {
+        let bucket = buckets . (distance % len)
+        if is_end position {
+            for [init, cycle] = [dist for ^position:dist in bucket] {
+                return cycle - init
+            }
+        }
+        push!(bucket, position : distance)
+        position travel= dirs . (distance % len)
+        distance += 1
+    }
+}
+
+proc main!() {
+    let [mut directions, ..nodes] = [l for line in readlines!() and l = chomp line and is l != ""];
+    let dirs = chars directions
+    let graph = of nodes |> map parse_node |> collect record
 
     let starts = (do() keys graph)
         |> filter is_start
@@ -31,18 +48,11 @@ proc main!() {
 
     let mut total = 0
     let mut memo = []
-    for start in starts {
-        let mut this_memo = {||}
-        let mut position = start
-        let mut distance = 0
-        while is_end position {
-            let dir = dirs . distance
-            position travel= dir
-            distance = (distance + 1) % length dirs
-            this_memo . distance = position
-        }
-        push!(memo, this_memo)
-    }
+    let len = length dirs
 
-    println!(total)
+    let mut cycles = []
+    for start in starts {
+        push!(cycles, cycle!(dirs, graph, start))
+    }
+    println!(fold lcm 1 cycles)
 }

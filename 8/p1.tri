@@ -13,7 +13,7 @@ func go 'L' = fst
 func go 'R' = snd
 
 proc main!() {
-    let [mut directions, _, ..nodes] = [chomp line for line in readlines!() and is line != ""];
+    let [mut directions, ..nodes] = [l for line in readlines!() and l = chomp line and is l != ""];
     let dirs = chars directions
     let graph = of nodes |> map parse_node |> collect record
     let travel = fn d p. go d (graph . p)
