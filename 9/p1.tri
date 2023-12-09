@@ -1,0 +1,23 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, split
+module num at "trilogy:num" use cast
+module iter at "trilogy:iter" use reduce, make_rangex, map, collect
+module array at "trilogy:array" use length, all, last
+
+func extrapolate nums =
+    if all ((==) 0) nums
+    then 0
+    else (length nums - 1)
+        |> make_rangex 0
+        |> map (fn i. nums.(i + 1) - nums.i)
+        |> collect array
+        |> extrapolate
+        |> (+) (last nums)
+
+proc main!() {
+    println!(
+        readlines
+        |> map (chomp >> split " " >> array::map cast >> extrapolate)
+        |> reduce (+)
+    )
+}
