@@ -21,17 +21,12 @@ func is_end _ = false
 proc cycle!(dirs, graph, start) {
     let travel = fn d p. go d (graph . p)
     let len = length dirs
-    let mut buckets = [[] for _ in dirs]
     let mut position = start
     let mut distance = 0
     while true {
-        let bucket = buckets . (distance % len)
         if is_end position {
-            for [init, cycle] = [dist for ^position:dist in bucket] {
-                return cycle - init
-            }
+            return distance
         }
-        push!(bucket, position : distance)
         position travel= dirs . (distance % len)
         distance += 1
     }
@@ -45,10 +40,6 @@ proc main!() {
     let starts = (do() keys graph)
         |> filter is_start
         |> collect array
-
-    let mut total = 0
-    let mut memo = []
-    let len = length dirs
 
     let mut cycles = []
     for start in starts {
