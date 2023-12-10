@@ -1,0 +1,47 @@
+module io at "trilogy:io" use println, readlines
+module iter at "trilogy:iter" use map, collect
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use position, contains
+
+func movex 'W = -1
+func movex 'E = 1
+func movex _ = 0
+
+func movey 'N = -1
+func movey 'S = 1
+func movey _ = 0
+
+func turn '|' 'N = 'N
+func turn '|' 'S = 'S
+func turn '-' 'E = 'E
+func turn '-' 'W = 'W
+func turn 'L' 'S = 'E
+func turn 'L' 'W = 'N
+func turn 'J' 'S = 'W
+func turn 'J' 'E = 'N
+func turn '7' 'N = 'W
+func turn '7' 'E = 'S
+func turn 'F' 'N = 'E
+func turn 'F' 'W = 'S
+
+proc main!() {
+    let lines = readlines |> map (chomp >> chars) |> collect array
+
+    let mut y = position (contains 'S') lines
+    let mut x = position ((==) 'S') (lines . y)
+
+    lines.y.x = '7'
+    let start = x:y
+
+    y += 1
+    let mut face = 'S
+    let mut distance = 1
+    while x:y != start {
+        face turn= lines.y.x
+        x += movex face
+        y += movey face
+        distance += 1
+    }
+
+    println!(distance / 2)
+}

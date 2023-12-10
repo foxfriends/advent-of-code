@@ -1,0 +1,88 @@
+module io at "trilogy:io" use println, readlines
+module iter at "trilogy:iter" use map, collect, rangex
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use position, contains, length, flatten, filter
+
+func movex 'W = -1
+func movex 'E = 1
+func movex _ = 0
+
+func movey 'N = -1
+func movey 'S = 1
+func movey _ = 0
+
+func turn '|' 'N = 'N
+func turn '|' 'S = 'S
+func turn '-' 'E = 'E
+func turn '-' 'W = 'W
+func turn 'L' 'S = 'E
+func turn 'L' 'W = 'N
+func turn 'J' 'S = 'W
+func turn 'J' 'E = 'N
+func turn '7' 'N = 'W
+func turn '7' 'E = 'S
+func turn 'F' 'N = 'E
+func turn 'F' 'W = 'S
+
+func crossx '|' = 0bb11
+func crossx 'F' = 0bb01
+func crossx '7' = 0bb01
+func crossx 'J' = 0bb10
+func crossx 'L' = 0bb10
+func crossx _ = 0bb00
+
+func crossy '-' = 0bb11
+func crossy 'F' = 0bb01
+func crossy '7' = 0bb10
+func crossy 'J' = 0bb10
+func crossy 'L' = 0bb01
+func crossy _ = 0bb00
+
+proc main!() {
+    let lines = readlines |> map (chomp >> chars) |> collect array
+    let pipes = [[false for _ in line] for line in lines]
+    let inout = [[0 for _ in line] for line in lines]
+
+    let h = length lines
+    let w = length (lines . 0)
+
+    let mut y = position (contains 'S') lines
+    let mut x = position ((==) 'S') (lines . y)
+    lines.y.x = '7'
+    pipes.y.x = true
+
+    let start = x:y
+
+    y += 1
+    let mut face = 'S
+    while x:y != start {
+        pipes.y.x = true
+        face turn= lines.y.x
+        x += movex face
+        y += movey face
+    }
+
+    for y in rangex 0 h {
+        let mut is_in = 0bb00
+        for x in rangex 0 w {
+            if pipes.y.x {
+                is_in ^= crossx (lines.y.x)
+            } else if is_in == 0bb11 && !pipes.y.x {
+                inout.y.x += 1
+            }
+        }
+    }
+
+    for x in rangex 0 w {
+        let mut is_in = 0bb00
+        for y in rangex 0 h {
+            if pipes.y.x {
+                is_in ^= crossy (lines.y.x)
+            } else if is_in == 0bb11 && !pipes.y.x {
+                inout.y.x += 1
+            }
+        }
+    }
+
+    println!(length <| [1 for row in inout and 2 in row])
+}
