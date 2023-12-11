@@ -7,7 +7,7 @@ module iter at "trilogy:iter" use rangex
 func scan f i [] = []
 func scan f i [x, ..xs] = let a = f i x, [a, ..scan f a xs]
 
-func height row = if all ((==) '.') row then 2 else 1
+func height row = if all ((==) '.') row then 1000000 else 1
 
 proc main!() {
     let universe = [chars <| chomp line for line in readlines!()]
