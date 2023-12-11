@@ -1,0 +1,38 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use fold, all, length, map
+module num at "trilogy:num" use abs
+module iter at "trilogy:iter" use rangex
+
+func scan f i [] = [i]
+func scan f i [x, ..xs] = let a = f i x, [a, ..scan f a xs]
+
+func height row = if all ((==) ".") row then 2 else 1
+
+proc main!() {
+    let universe = [chars <| chomp line for line in readlines!()]
+    let transposed = [[universe.y.x for y in rangex 0 (length universe)] for x in rangex 0 (length <| universe.0)]
+
+    let dys = map height universe
+    let dxs = map height transposed
+
+    let x_stars = [length [1 for '#' in row] for row in universe]
+    let y_stars = [length [1 for '#' in col] for col in transposed]
+    let total = fold (+) 0 x_stars
+    let at_x = x_stars
+        |> scan (+) 0
+        |> skip 1
+    let at_y = y_stars
+        |> scan (+) 0
+        |> skip 1
+
+    let xdist = fold (+) 0 [
+        (dxs.i) * (at_x.i) * at_x.(i + 1)
+        for i in range 0 (length dxs)
+    ]
+    let ydist = fold (+) 0 [
+        (dys.i) * (at_y.i) * at_y.(i + 1)
+        for i in range 0 (length dys)
+    ]
+    println!(xdist + ydist)
+}
