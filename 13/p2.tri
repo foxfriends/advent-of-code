@@ -1,0 +1,56 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use split, length, all, slice, fold
+module iter at "trilogy:iter" use rangex
+module num at "trilogy:num" use min
+
+func transpose arr = [[arr.y.x for y in rangex 0 (length arr)] for x in rangex 0 (length (arr.0))]
+
+func palindrome [] = true
+func palindrome [_] = true
+func palindrome [x, ..xs, x] = palindrome xs
+func palindrome _ = false
+
+func palindrome_with_correction [] = false:true
+func palindrome_with_correction [_] = false:true
+func palindrome_with_correction [x, ..xs, x] = palindrome_with_correction xs
+func palindrome_with_correction [x, ..xs, y] = true:palindrome xs
+func palindrome_with_correction _ = false:false
+
+func reflect_around _ (_:false) _ = false:false
+func reflect_around gap (corrected_already:true) line =
+    let to_close_edge = min gap (length line - gap),
+    let part = slice (gap - to_close_edge) (to_close_edge * 2) line,
+    if corrected_already
+        then true:palindrome part
+        else palindrome_with_correction part
+
+proc main!() {
+    let lines = split ((==) "") [chomp line for line in readlines!()]
+    let puzzles = [[chars line for line in puzzle] for puzzle in lines]
+
+    let mut total = 0
+    # Doing horizontal first
+    for puzzle in $(transpose p for p in puzzles) {
+        for gap in rangex 1 (length (puzzle.0)) {
+            if true:true == fold (reflect_around gap) (false:true) puzzle {
+                total += gap
+                break
+            }
+        }
+    }
+
+    total *= 100
+
+    # Vertical second
+    for puzzle in puzzles {
+        for gap in rangex 1 (length (puzzle.0)) {
+            if true:true == fold (reflect_around gap) (false:true) puzzle {
+                total += gap
+                break
+            }
+        }
+    }
+
+    println!(total)
+}
