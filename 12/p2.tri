@@ -1,0 +1,72 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use split, chomp, chars
+module iter at "trilogy:iter" use range
+module num at "trilogy:num" use cast
+module array at "trilogy:array" use all, fold, find, push
+module tuple at "trilogy:tuple" use take, skip, length, to_list, concat
+
+func list_chars ss = ss |> chars |> to_list
+
+func valid unit = true
+func valid '#' : _ = false
+func valid _ : xs = valid xs
+
+rule consume(unit, 0, unit)
+rule consume(('?' or '.') : ss, 0, '.' : ss)
+rule consume(('?' or '#') : ss, n, rs) <-
+    is n != 0
+    and n2 = n - 1
+    and consume(ss, n2, rs)
+
+rule partial(ss, ns, tail, []) <- solution(ss, ns, tail)
+rule partial(ss, [..ns, n], tail, [n]) <-
+    pref = take (length ss - (n - 1)) ss
+    and suff = skip (length ss - (n - 1)) ss
+    and is valid suff
+    and solution(pref, ns, t1)
+    and tail = concat t1 suff
+
+rule solution(ss, [], ss)
+rule solution(('.' or '?') : ss, ns and [_, .._], tail) <- solution(ss, ns, tail)
+rule solution(ss, [n, ..ns], tail) <- consume(ss, n, rs) and solution(rs, ns, tail)
+
+proc main!() {
+    let mut total = 0
+    let mut i = 0
+
+    for line in readlines!() {
+        let [puzzle, numbers] = split " " <| chomp line
+        let nums = [cast n for n in split "," numbers]
+
+        let mut prefixes = [ [unit, [], 1] ]
+        let puzzle_chars = list_chars puzzle
+
+        for _ in range 1 5 {
+            let mut suffixes = []
+            for [prefix, more, count] in prefixes {
+                let puzz = if prefix != unit then concat prefix ('?' : puzzle_chars) else puzzle_chars
+                let allnums = [..more, ..nums]
+                for partial(^puzz, ^allnums, tail, more) {
+                    with {
+                        let prev = find (fn [s, m, _]. s == tail && m == more) suffixes
+                        prev.2 += count
+                    } when 'MIA invert {
+                        push!(suffixes, [tail, more, count])
+                        cancel
+                    } else yield
+                }
+            }
+            prefixes = suffixes
+            println!(prefixes)
+        }
+        for [puzz, nums, count] in prefixes {
+            for solution(^puzz, ^nums, tail) and is valid tail {
+                total += count
+            }
+        }
+        println!(i:total)
+        i += 1
+    }
+
+    println!(total)
+}

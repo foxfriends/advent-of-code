@@ -1,0 +1,32 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use split, chomp, chars
+module num at "trilogy:num" use cast
+
+func trunc "." <> ss = trunc ss
+func trunc ss = ss
+
+rule consume("", 0, "")
+rule consume(("?" <> ss) or ("." <> ss), 0, s2) <- s2 = trunc ss
+rule consume(("?" <> ss) or ("#" <> ss), n, rs) <-
+    is n != 0
+    and n2 = n - 1
+    and consume(ss, n2, rs)
+
+rule solution("", [])
+rule solution("." <> ss, ns) <- solution(ss, ns)
+rule solution("?" <> ss, ns) <- solution(ss, ns)
+rule solution(ss, [n, ..ns]) <- consume(ss, n, rs) and solution(rs, ns)
+
+proc main!() {
+    let mut total = 0
+
+    for line in readlines!() {
+        let [puzzle, numbers] = split " " <| chomp line
+        let nums = [cast n for n in split "," numbers]
+        for solution(^puzzle, ^nums) {
+            total += 1
+        }
+    }
+
+    println!(total)
+}
