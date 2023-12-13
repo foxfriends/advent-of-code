@@ -1,9 +1,9 @@
 module io at "trilogy:io" use readlines, println
-module str at "trilogy:str" use split, chomp, chars
-module iter at "trilogy:iter" use range
+module str at "trilogy:str" use split, chomp, chars, joined, fmt, length
+module iter at "trilogy:iter" use range, rangex, repeat, collect
 module num at "trilogy:num" use cast
-module array at "trilogy:array" use all, fold, find, push
-module tuple at "trilogy:tuple" use take, skip, length, to_list, concat
+module array at "trilogy:array" use all, fold, find, push, skip
+module tuple at "trilogy:tuple" use to_list, concat
 
 func list_chars ss = ss |> chars |> to_list
 
@@ -11,61 +11,61 @@ func valid unit = true
 func valid '#' : _ = false
 func valid _ : xs = valid xs
 
-rule consume(unit, 0, unit)
-rule consume(('?' or '.') : ss, 0, '.' : ss)
-rule consume(('?' or '#') : ss, n, rs) <-
+rule consume(('?' or '.') : ss, 0, '.' : unit, ss)
+rule consume(('?' or '#') : ss, n, '.' : rep, rs) <-
     is n != 0
     and n2 = n - 1
-    and consume(ss, n2, rs)
+    and consume(ss, n2, rep, rs)
 
-rule partial(ss, ns, tail, []) <- solution(ss, ns, tail)
-rule partial(ss, [..ns, n], tail, [n]) <-
-    pref = take (length ss - (n - 1)) ss
-    and suff = skip (length ss - (n - 1)) ss
-    and is valid suff
-    and solution(pref, ns, t1)
-    and tail = concat t1 suff
+rule solution(unit, _, unit, 0)
+rule solution('?' : ss, ns, tail, ps) <- solution('.' : ss, ns, tail, ps)
+rule solution('?' : ss, ns, tail, ps) <- solution('#' : ss, ns, tail, ps)
+rule solution('.' : ss, ns, '.' : tail, ps) <- solution(ss, ns, tail, ps)
+rule solution(ss and ('#' : _), [n, ..ns], tail, p2) <-
+    if consume(ss, n, replace_with, rest)
+    then (
+        solution(rest, ns, post_solve, ps)
+        and tail = concat replace_with post_solve
+        and p2 = ps + 1
+    )
+    else (
+        tail = ss
+        and p2 = 0
+    )
 
-rule solution(ss, [], ss)
-rule solution(('.' or '?') : ss, ns and [_, .._], tail) <- solution(ss, ns, tail)
-rule solution(ss, [n, ..ns], tail) <- consume(ss, n, rs) and solution(rs, ns, tail)
+rule prefix(n:_, n:unit)
+rule prefix(n:ns, n:suf) <- prefix(ns, suf)
 
 proc main!() {
     let mut total = 0
-    let mut i = 0
 
     for line in readlines!() {
         let [puzzle, numbers] = split " " <| chomp line
-        let nums = [cast n for n in split "," numbers]
+        let t = 5
+        let nums = [cast n for n in split "," (repeat t numbers |> collect (joined ","))]
+        let puzzle_chars = (repeat t puzzle |> collect (joined "?")) <> "."
 
-        let mut prefixes = [ [unit, [], 1] ]
-        let puzzle_chars = list_chars puzzle
-
-        for _ in range 1 5 {
-            let mut suffixes = []
-            for [prefix, more, count] in prefixes {
-                let puzz = if prefix != unit then concat prefix ('?' : puzzle_chars) else puzzle_chars
-                let allnums = [..more, ..nums]
-                for partial(^puzz, ^allnums, tail, more) {
-                    with {
-                        let prev = find (fn [s, m, _]. s == tail && m == more) suffixes
-                        prev.2 += count
-                    } when 'MIA invert {
-                        push!(suffixes, [tail, more, count])
-                        cancel
-                    } else yield
+        let mut ways = {| 0 => {| 0 => {| unit => 1 |} |} |}
+        println!(puzzle_chars)
+        for limit in rangex 0 <| length puzzle_chars {
+            let ch = puzzle_chars.limit
+            let mut rest = {| |}
+            for placed:tails in ways.limit and tail:score in tails {
+                let ns = skip placed nums
+                let puzz = concat tail (ch:unit)
+                for solution(^puzz, ^ns, unused, inserted) {
+                    with { rest.(inserted + placed) = rest.(inserted + placed) } when 'MIA resume {||} else yield
+                    with { rest.(inserted + placed).unused += score } when 'MIA resume 0 else yield
                 }
             }
-            prefixes = suffixes
-            println!(prefixes)
+            ways.(limit + 1) = rest
         }
-        for [puzz, nums, count] in prefixes {
-            for solution(^puzz, ^nums, tail) and is valid tail {
-                total += count
+        for tail:score in ways.(length puzzle_chars).(array::length nums) {
+            if valid tail {
+                total += score
             }
         }
-        println!(i:total)
-        i += 1
+        println!(total)
     }
 
     println!(total)
