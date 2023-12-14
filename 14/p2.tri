@@ -26,32 +26,12 @@ proc west!(grid) {
     let w = length grid
     let h = length (grid.0)
     for row in rangex 0 h {
-        let mut move_to = w - 1
-        for uncol in range 1 w {
-            let col = w - uncol
-            match grid.row.col
-                case '#' { move_to = col - 1 }
-                case 'O' {
-                    if move_to != row {
-                        grid.row.move_to = 'O'
-                        grid.row.col = '.'
-                    }
-                    move_to -= 1
-                }
-        }
-    }
-}
-
-proc east!(grid) {
-    let w = length grid
-    let h = length (grid.0)
-    for row in rangex 0 h {
         let mut move_to = 0
         for col in rangex 0 w {
             match grid.row.col
                 case '#' { move_to = col + 1 }
                 case 'O' {
-                    if move_to != row {
+                    if move_to != col {
                         grid.row.move_to = 'O'
                         grid.row.col = '.'
                     }
@@ -81,6 +61,26 @@ proc south!(grid) {
     }
 }
 
+proc east!(grid) {
+    let w = length grid
+    let h = length (grid.0)
+    for row in rangex 0 h {
+        let mut move_to = w - 1
+        for uncol in range 1 w {
+            let col = w - uncol
+            match grid.row.col
+                case '#' { move_to = col - 1 }
+                case 'O' {
+                    if move_to != col {
+                        grid.row.move_to = 'O'
+                        grid.row.col = '.'
+                    }
+                    move_to -= 1
+                }
+        }
+    }
+}
+
 proc spin!(grid) {
     north!(grid)
     west!(grid)
@@ -88,20 +88,43 @@ proc spin!(grid) {
     east!(grid)
 }
 
+func key grid = fold (fn a b. $"${a}${str::cast b}") "" <| do() $(ch for line in grid and (ch in line or ch = '\n'))
+
+const target = 1000000000
+
 proc main!() {
     let mut total = 0
     let grid = [chars <| chomp line for line in readlines!()]
-    for _ in rangex 0 (1000000000 / 4) {
-        spin!(grid)
+    let mut cycles = 0
+    let mut cache = {||}
+    while cycles < target {
+        let k = key grid
+        with {
+            let last_seen = cache.k
+            let remaining = target - cycles
+            let distance = cycles - last_seen
+            let times = remaining // distance
+            if times > 0 {
+                cycles += times * distance
+            } else {
+                cache.k = cycles
+                spin!(grid)
+                cycles += 1
+            }
+        } when 'MIA invert {
+            cache.k = cycles
+            spin!(grid)
+            cycles += 1
+            cancel unit
+        } else yield
     }
     for col in transpose grid {
-        let mut max_score = length col
-        for segment in col |> split ((==) '#') {
-            let count = segment |> filter ((==) 'O') |> length
-            if count > 0 {
-                total += fold (-) (max_score * count) (make_rangex 0 count)
+        let mut tile_score = length col
+        for char in col {
+            if char == 'O' {
+                total += tile_score
             }
-            max_score -= length segment + 1
+            tile_score -= 1
         }
     }
     println!(total)
