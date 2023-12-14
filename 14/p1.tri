@@ -1,0 +1,20 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use transpose, split, length, filter
+module iter at "trilogy:iter" use make_rangex, fold
+
+proc main!() {
+    let mut total = 0
+    let grid = [chars <| chomp line for line in readlines!()]
+    for col in transpose grid {
+        let mut max_score = length col
+        for segment in col |> split ((==) '#') {
+            let count = segment |> filter ((==) 'O') |> length
+            if count > 0 {
+                total += fold (-) (max_score * count) (make_rangex 0 count)
+            }
+            max_score -= length segment + 1
+        }
+    }
+    println!(total)
+}
