@@ -1,0 +1,43 @@
+module io at "trilogy:io" use println, readline
+module num at "trilogy:num" use cast
+module str at "trilogy:str" use split, chomp, chars
+module array at "trilogy:array" use fold, map
+module iter at "trilogy:iter" use of
+
+func hash cv ch = ((cv + ch) * 17) % 256
+func unlabel label = fold hash 0 (map cast <| chars label)
+
+func parse label <> "-" = 'remove(label)
+func parse str = let [label, focal] = split "=" str, 'insert(label : cast focal)
+
+func reject _ unit = unit
+func reject label (label:_):rest = rest
+func reject label ok:rest = ok:reject label rest
+
+func apply rec 'remove(label) = {|
+    ..rec,
+    unlabel label => with reject label (rec.(unlabel label)) when 'MIA cancel unit else yield
+|}
+
+func insert key val unit = (key:val):unit
+func insert key val (key:_):rest = (key:val):rest
+func insert key val ok:rest = ok:insert key val rest
+
+func apply rec 'insert(label : val) = {|
+    ..rec,
+    unlabel label => with insert label val (rec.(unlabel label)) when 'MIA cancel (label:val):unit else yield
+|}
+
+func score _ unit = 0
+func score n (_:v):rest = n * v + score (n + 1) rest
+
+proc main!() {
+    let total = readline!()
+        |> chomp
+        |> split ","
+        |> map parse
+        |> fold apply {||}
+        |> (fn rec. [(box + 1) * score 1 vals for box:vals in rec])
+        |> fold (+) 0
+    println!(total)
+}
