@@ -1,0 +1,16 @@
+module io at "trilogy:io" use println, readline
+module num at "trilogy:num" use cast
+module str at "trilogy:str" use split, chomp, chars
+module array at "trilogy:array" use fold, map
+
+func hash cv ch = ((cv + ch) * 17) % 256
+
+proc main!() {
+    let total = readline!()
+        |> chomp
+        |> split ","
+        |> map (chars >> map cast)
+        |> map (fold hash 0)
+        |> fold (+) 0
+    println!(total)
+}
