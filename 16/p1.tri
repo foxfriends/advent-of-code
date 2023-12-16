@@ -58,21 +58,19 @@ proc main!() {
         let x:y:d = fst beams
         beams = snd beams
 
-        with {
-            let index = y * height + x
-            if visited d (energy.index) {
-                continue
-            }
+        let index = y * height + x
+        if visited d (energy.index) {
+            continue
+        }
 
-            energy.index visit= d
-            let ch = puzzle.index
-            for step(^d, ^ch, d2) {
-                let x2:y2 = move x y d2
-                if x2 >= 0 && y2 >= 0 && x2 < width && y2 < height {
-                    beams = (x2:y2:d2) : beams
-                }
+        energy.index visit= d
+        let ch = puzzle.index
+        for step(^d, ^ch, d2) {
+            let x2:y2 = move x y d2
+            if x2 >= 0 && y2 >= 0 && x2 < width && y2 < height {
+                beams = (x2:y2:d2) : beams
             }
-        } when 'MIA cancel continue unit else yield
+        }
     }
 
     let mut total = 0
