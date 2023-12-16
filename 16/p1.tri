@@ -1,6 +1,8 @@
 module io at "trilogy:io" use println, readlines
 module str at "trilogy:str" use chomp, chars
-module array at "trilogy:array" use is_empty, length, push, skip, first, fold
+module array at "trilogy:array" use length, fold
+module iter at "trilogy:iter" use rangex
+module tuple at "trilogy:tuple" use fst, snd
 
 rule step('e, '|', 'n)
 rule step('e, '|', 's)
@@ -38,35 +40,44 @@ func visited 'e x = (x & 0bb0010) != 0bb0000
 func visited 'n x = (x & 0bb0100) != 0bb0000
 func visited 's x = (x & 0bb1000) != 0bb0000
 
-func move x y 'e = (x+1):y:'e
-func move x y 'w = (x-1):y:'w
-func move x y 'n = x:(y-1):'n
-func move x y 's = x:(y+1):'s
+func move x y 'e = (x+1):y
+func move x y 'w = (x-1):y
+func move x y 'n = x:(y-1)
+func move x y 's = x:(y+1)
 
 proc main!() {
     let grid = [chomp line for line in readlines!()]
     let height = length grid
+    let width = str::length (grid.0)
     let puzzle = fold (<>) "" grid
 
-    let energy = [[0bb0000 for _ in chars line] for line in grid]
-    let mut beams = [0:0:'e]
+    let energy = [0bb0000 for _ in rangex 0 (height * width)]
+    let mut beams = (0:0:'e):unit
 
-    while !(is_empty beams) {
-        let x:y:d = first beams
-        beams skip= 1
+    while beams != unit {
+        let x:y:d = fst beams
+        beams = snd beams
 
         with {
-            if visited d (energy.y.x) {
+            let index = y * height + x
+            if visited d (energy.index) {
                 continue
             }
 
-            energy.y.x visit= d
-            let ch = puzzle.(y * height + x)
+            energy.index visit= d
+            let ch = puzzle.index
             for step(^d, ^ch, d2) {
-                push!(beams, move x y d2)
+                let x2:y2 = move x y d2
+                if x2 >= 0 && y2 >= 0 && x2 < width && y2 < height {
+                    beams = (x2:y2:d2) : beams
+                }
             }
         } when 'MIA cancel continue unit else yield
     }
 
-    println!(length [unit for line in energy and bits in line and is bits != 0bb0000])
+    let mut total = 0
+    for bits in energy and is bits != 0bb0000 {
+        total += 1
+    }
+    println!(total)
 }
