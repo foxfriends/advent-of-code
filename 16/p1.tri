@@ -1,7 +1,10 @@
+## NOTE: this one gets the wrong answer, and also is slower. It's a fun exercise in
+## bits values though, and maybe it's wrong because of bugs.
 module io at "trilogy:io" use println, readlines
 module str at "trilogy:str" use chomp, chars
 module array at "trilogy:array" use length, fold
 module iter at "trilogy:iter" use rangex
+module bits at "trilogy:bits" use zeros, concat
 module tuple at "trilogy:tuple" use fst, snd
 
 rule step('e, '|', 'n)
@@ -30,20 +33,21 @@ rule step('s, '\\', 'e)
 
 rule step(d, '.', d)
 
-func visit 'w x = x | 0bb0001
-func visit 'e x = x | 0bb0010
-func visit 'n x = x | 0bb0100
-func visit 's x = x | 0bb1000
+func visit 'w = 0bb0001
+func visit 'e = 0bb0010
+func visit 'n = 0bb0100
+func visit 's = 0bb1000
 
-func visited 'w x = (x & 0bb0001) != 0bb0000
-func visited 'e x = (x & 0bb0010) != 0bb0000
-func visited 'n x = (x & 0bb0100) != 0bb0000
-func visited 's x = (x & 0bb1000) != 0bb0000
+func visited d x = ((visit d) & x) != 0bb0000
 
 func move x y 'e = (x+1):y
 func move x y 'w = (x-1):y
 func move x y 'n = x:(y-1)
 func move x y 's = x:(y+1)
+
+func shrex b n = concat (zeros n) b
+func write index val energy = energy | (shrex val <| index * 4)
+func read index energy = 0bb0000 | (energy <~ (index * 4))
 
 proc main!() {
     let grid = [chomp line for line in readlines!()]
@@ -51,19 +55,18 @@ proc main!() {
     let width = str::length (grid.0)
     let puzzle = fold (<>) "" grid
 
-    let energy = [0bb0000 for _ in rangex 0 (height * width)]
+    let mut energy = zeros (height * (str::length (grid.0)) * 4)
     let mut beams = (0:0:'e):unit
-
     while beams != unit {
         let x:y:d = fst beams
         beams = snd beams
 
         let index = y * height + x
-        if visited d (energy.index) {
+        if visited d (read index energy) {
             continue
         }
 
-        energy.index visit= d
+        energy write= index (visit d)
         let ch = puzzle.index
         for step(^d, ^ch, d2) {
             let x2:y2 = move x y d2
@@ -74,7 +77,7 @@ proc main!() {
     }
 
     let mut total = 0
-    for bits in energy and is bits != 0bb0000 {
+    for offset in rangex 0 (str::length puzzle) and is read offset energy != 0bb0000 {
         total += 1
     }
     println!(total)
