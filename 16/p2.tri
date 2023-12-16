@@ -57,7 +57,8 @@ proc main!() {
 
     let base_energy = zeros (height * (str::length (grid.0)) * 4)
     let mut best = 0
-    for (sx in rangex 0 width and sy:sd in [0:'s, (height-1):'n]) { # or (sy in rangex 0 height and sx:sd in [0:'e, (width-1):'w]) {
+    for (sx in rangex 0 width and sy:sd in [0:'s, (height-1):'n])
+    or (sy in rangex 0 height and sx:sd in [0:'e, (width-1):'w]) {
         println!(sx:sy:sd)
         let mut energy = base_energy
         let mut beams = (sx:sy:sd):unit
