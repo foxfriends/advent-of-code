@@ -1,0 +1,102 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, chars
+module num at "trilogy:num" use max
+module array at "trilogy:array" use length, fold
+module bits at "trilogy:bits" use zeros, concat
+module iter at "trilogy:iter" use rangex
+module tuple at "trilogy:tuple" use fst, snd
+
+rule step('e, '|', 'n)
+rule step('e, '|', 's)
+rule step('w, '|', 'n)
+rule step('w, '|', 's)
+rule step('n, '|', 'n)
+rule step('s, '|', 's)
+
+rule step('e, '-', 'e)
+rule step('w, '-', 'w)
+rule step('n, '-', 'e)
+rule step('n, '-', 'w)
+rule step('s, '-', 'e)
+rule step('s, '-', 'w)
+
+rule step('e, '/', 'n)
+rule step('w, '/', 's)
+rule step('s, '/', 'w)
+rule step('n, '/', 'e)
+
+rule step('w, '\\', 'n)
+rule step('e, '\\', 's)
+rule step('n, '\\', 'w)
+rule step('s, '\\', 'e)
+
+rule step(d, '.', d)
+
+func visit 'w = 0bb0001
+func visit 'e = 0bb0010
+func visit 'n = 0bb0100
+func visit 's = 0bb1000
+
+func visited d x = (x & (visit d)) != 0bb0000
+
+func move x y 'e = (x+1):y
+func move x y 'w = (x-1):y
+func move x y 'n = x:(y-1)
+func move x y 's = x:(y+1)
+
+func shrex b n = concat (zeros n) b
+func write index val energy = energy | (shrex val <| index * 4)
+func read index energy = 0bb0000 | (energy <~ (index * 4))
+
+proc solve!(puzzle, width, height, x, y, d) {
+    match yield 'recall(x:y:d)
+        case unit {}
+        case ans {
+            return ans
+        }
+
+    let mut energy = zeros <| str::length puzzle * 4
+    let index = y * height + x
+    let ch = puzzle.index
+    energy write= index (visit d)
+    yield 'save((x:y:d):energy)
+    for step(^d, ^ch, d2) and x2:y2 = move x y d2 and is x2 >= 0 && y2 >= 0 && x2 < width && y2 < height {
+        let partial = solve!(puzzle, width, height, x2, y2, d2)
+        energy |= partial
+    }
+    yield 'save((x:y:d):energy)
+    return energy
+}
+
+proc main!() {
+    let grid = [chomp line for line in readlines!()]
+    let height = length grid
+    let width = str::length <| grid.0
+    let puzzle = fold (<>) "" grid
+
+    let mut best = 0
+
+    let cache = {||}
+
+    with {
+        for (x in rangex 0 width and y:d in [0:'s, (height-1):'n])
+        or (y in rangex 0 height and x:d in [0:'e, (width-1):'w]) {
+            println!(x:y:d)
+            let energy = solve!(puzzle, width, height, x, y, d)
+            let mut total = 0
+            for offset in rangex 0 (str::length puzzle) and is read offset energy != 0bb0000 {
+                total += 1
+            }
+            println!(total)
+            best max= total
+            println!(best)
+        }
+    }
+        when 'recall(k) resume (with cache.k when 'MIA cancel unit else yield)
+        when 'save(k:ans) invert {
+            cache.k = ans
+            cancel resume unit
+        }
+        else yield
+    println!(best)
+}
