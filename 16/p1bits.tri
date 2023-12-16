@@ -1,0 +1,79 @@
+## NOTE: this one gets the wrong answer, and also is slower. It's a fun exercise in
+## bits values though, and maybe it's wrong because of bugs.
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use is_empty, length, push, skip, first, fold
+module iter at "trilogy:iter" use rangex
+module bits at "trilogy:bits" use zeros, concat
+
+func shrex b n = concat (zeros n) b
+
+rule step('e, '|', 'n)
+rule step('e, '|', 's)
+rule step('w, '|', 'n)
+rule step('w, '|', 's)
+rule step('n, '|', 'n)
+rule step('s, '|', 's)
+
+rule step('e, '-', 'e)
+rule step('w, '-', 'w)
+rule step('n, '-', 'e)
+rule step('n, '-', 'w)
+rule step('s, '-', 'e)
+rule step('s, '-', 'w)
+
+rule step('e, '/', 'n)
+rule step('w, '/', 's)
+rule step('s, '/', 'w)
+rule step('n, '/', 'e)
+
+rule step('w, '\\', 'n)
+rule step('e, '\\', 's)
+rule step('n, '\\', 'w)
+rule step('s, '\\', 'e)
+
+rule step(d, '.', d)
+
+func visit 'w = 0bb0001
+func visit 'e = 0bb0010
+func visit 'n = 0bb0100
+func visit 's = 0bb1000
+
+func visited d x = ((visit d) & x) != 0bb0000
+
+func move x y 'e = (x+1):y:'e
+func move x y 'w = (x-1):y:'w
+func move x y 'n = x:(y-1):'n
+func move x y 's = x:(y+1):'s
+
+func write index val energy = energy | (shrex val <| index * 4)
+func read index energy = 0bb0000 | (energy <~ (index * 4))
+
+proc main!() {
+    let grid = [chomp line for line in readlines!()]
+    let height = length grid
+    let puzzle = fold (<>) "" grid
+
+    let mut energy = zeros (height * (str::length (grid.0)) * 4)
+    let mut beams = [0:0:'e]
+    while !(is_empty beams) {
+        let x:y:d = first beams
+        let index = y * height + x
+        beams skip= 1
+
+        with {
+            let ch = puzzle.index
+
+            if visited d (read index energy) {
+                continue
+            }
+
+            energy write= index (visit d)
+            for step(^d, ^ch, d2) {
+                push!(beams, move x y d2)
+            }
+        } when 'MIA cancel continue unit else yield
+    }
+
+    println!(length [unit for offset in rangex 0 (str::length puzzle) and is read offset energy != 0bb0000])
+}

@@ -1,0 +1,72 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use is_empty, length, push, skip, first, fold
+
+rule step('e, '|', 'n)
+rule step('e, '|', 's)
+rule step('w, '|', 'n)
+rule step('w, '|', 's)
+rule step('n, '|', 'n)
+rule step('s, '|', 's)
+
+rule step('e, '-', 'e)
+rule step('w, '-', 'w)
+rule step('n, '-', 'e)
+rule step('n, '-', 'w)
+rule step('s, '-', 'e)
+rule step('s, '-', 'w)
+
+rule step('e, '/', 'n)
+rule step('w, '/', 's)
+rule step('s, '/', 'w)
+rule step('n, '/', 'e)
+
+rule step('w, '\\', 'n)
+rule step('e, '\\', 's)
+rule step('n, '\\', 'w)
+rule step('s, '\\', 'e)
+
+rule step(d, '.', d)
+
+func visit 'w x = x | 0bb0001
+func visit 'e x = x | 0bb0010
+func visit 'n x = x | 0bb0100
+func visit 's x = x | 0bb1000
+
+func visited 'w x = (x & 0bb0001) != 0bb0000
+func visited 'e x = (x & 0bb0010) != 0bb0000
+func visited 'n x = (x & 0bb0100) != 0bb0000
+func visited 's x = (x & 0bb1000) != 0bb0000
+
+func move x y 'e = (x+1):y:'e
+func move x y 'w = (x-1):y:'w
+func move x y 'n = x:(y-1):'n
+func move x y 's = x:(y+1):'s
+
+proc main!() {
+    let grid = [chomp line for line in readlines!()]
+    let height = length grid
+    let puzzle = fold (<>) "" grid
+
+    let energy = [[0bb0000 for _ in chars line] for line in grid]
+    let mut beams = [0:0:'e]
+
+    while !(is_empty beams) {
+        let x:y:d = first beams
+        beams skip= 1
+
+        with {
+            if visited d (energy.y.x) {
+                continue
+            }
+
+            energy.y.x visit= d
+            let ch = puzzle.(y * height + x)
+            for step(^d, ^ch, d2) {
+                push!(beams, move x y d2)
+            }
+        } when 'MIA cancel continue unit else yield
+    }
+
+    println!(length [unit for line in energy and bits in line and is bits != 0bb0000])
+}
