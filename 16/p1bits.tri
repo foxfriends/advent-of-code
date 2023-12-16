@@ -7,8 +7,6 @@ module iter at "trilogy:iter" use rangex
 module bits at "trilogy:bits" use zeros, concat
 module tuple at "trilogy:tuple" use fst, snd
 
-func shrex b n = concat (zeros n) b
-
 rule step('e, '|', 'n)
 rule step('e, '|', 's)
 rule step('w, '|', 'n)
@@ -47,6 +45,7 @@ func move x y 'w = (x-1):y
 func move x y 'n = x:(y-1)
 func move x y 's = x:(y+1)
 
+func shrex b n = concat (zeros n) b
 func write index val energy = energy | (shrex val <| index * 4)
 func read index energy = 0bb0000 | (energy <~ (index * 4))
 
@@ -63,23 +62,23 @@ proc main!() {
         beams = snd beams
 
         let index = y * height + x
+        if visited d (read index energy) {
+            continue
+        }
 
-        with {
-            let ch = puzzle.index
-
-            if visited d (read index energy) {
-                continue
+        energy write= index (visit d)
+        let ch = puzzle.index
+        for step(^d, ^ch, d2) {
+            let x2:y2 = move x y d2
+            if x2 >= 0 && y2 >= 0 && x2 < width && y2 < height {
+                beams = (x2:y2:d2) : beams
             }
-
-            energy write= index (visit d)
-            for step(^d, ^ch, d2) {
-                let x2:y2 = move x y d2
-                if x2 >= 0 && y2 >= 0 && x2 < width && y2 < height {
-                    beams = (x2:y2:d2) : beams
-                }
-            }
-        } when 'MIA cancel continue unit else yield
+        }
     }
 
-    println!(length [unit for offset in rangex 0 (str::length puzzle) and is read offset energy != 0bb0000])
+    let mut total = 0
+    for offset in rangex 0 (str::length puzzle) and is read offset energy != 0bb0000 {
+        total += 1
+    }
+    println!(total)
 }
