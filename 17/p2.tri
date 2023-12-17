@@ -53,10 +53,16 @@ proc main!() {
                 if i <= 3 { continue }
                 let newscore = best.pos.fhv + offset
                 best.newpos = with best.newpos else cancel {| |}
-                let oldscore = with best.newpos.dhv else cancel newscore + 1
-                if newscore < oldscore {
+                with {
+                    if newscore < best.newpos.dhv {
+                        queue = ltree::remove (newpos:dir) queue
+                        best.newpos.dhv = newscore
+                        queue = ltree::insert (newpos:dir) queue
+                    }
+                } else invert {
                     best.newpos.dhv = newscore
                     queue = ltree::insert (newpos:dir) queue
+                    cancel
                 }
             }
         }
