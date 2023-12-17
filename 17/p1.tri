@@ -3,6 +3,7 @@ module num at "trilogy:num" use re, im, cast, min
 module str at "trilogy:str" use chomp, chars, fmt
 module array at "trilogy:array" use merge, length
 module tuple at "trilogy:tuple" use fst, snd
+module btreemod at "trilogy:btree" use btree
 
 const N = -0i1
 const S = 0i1
@@ -30,16 +31,18 @@ proc main!() {
     let score = fn pos:dir. best.pos.(key dir)
     let enqueue = fn pos dir. insert (asc score) (pos:dir)
 
-    let mut queue = (0i0:E) : (0i0:S) : unit
-    while queue != unit {
-        let pos:face = fst queue
-        println!(pos:face)
+    let ltree = btree (asc score)
+
+    let mut queue = ltree::from [0i0:E, 0i0:S]
+    while queue != 'empty {
+        let popmin = ltree::pop_min queue
+        let pos:face = fst popmin
+        queue = snd popmin
         let fhv = key face
         if pos == goal {
             println!(best.pos.fhv)
             exit 0
         }
-        queue = snd queue
         for dir in turn face {
             let dhv = key dir
             let mut offset = 0
@@ -51,7 +54,7 @@ proc main!() {
                 let oldscore = with best.newpos.dhv else cancel newscore + 1
                 if newscore < oldscore {
                     best.newpos.dhv = newscore
-                    queue enqueue= newpos dir
+                    queue = ltree::insert (newpos:dir) queue
                 }
             }
         }
