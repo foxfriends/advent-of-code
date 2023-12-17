@@ -35,9 +35,8 @@ proc main!() {
 
     let mut queue = ltree::from [0i0:E, 0i0:S]
     while queue != 'empty {
-        let popmin = ltree::pop_min queue
-        let pos:face = fst popmin
-        queue = snd popmin
+        let (pos:face):q2 = ltree::pop_min queue
+        queue = q2
         let fhv = key face
         if pos == goal {
             println!(best.pos.fhv)
@@ -47,7 +46,7 @@ proc main!() {
             let dhv = key dir
             let mut offset = 0
             for i in [1, 2, 3] {
-                let newpos = (pos + i * dir)
+                let newpos = pos + i * dir
                 offset += with grid.(im newpos).(re newpos) else invert { break }
                 let newscore = best.pos.fhv + offset
                 best.newpos = with best.newpos else cancel {| |}
