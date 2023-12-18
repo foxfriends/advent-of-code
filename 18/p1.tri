@@ -1,0 +1,81 @@
+module io at "trilogy:io" use println, readlines
+module regex at "trilogy:regex"
+module tuple at "trilogy:tuple"
+module num at "trilogy:num" use im, re, min, max, cast
+module str at "trilogy:str" use joined
+module array at "trilogy:array" use fold, map, flatmap, length, filter
+module iter at "trilogy:iter" use repeat, collect, range, rangex, of
+
+const line_regex = regex::new "([LRUD]) (\\d+) \\(#([a-f0-9]{6})\\)"
+
+func scan f i [] = [i]
+func scan f i [x, ..xs] = let a = f i x, [a, ..scan f a xs]
+
+const L = -1
+const R = 1
+const U = -0i1
+const D = 0i1
+
+func delta "L" = L
+func delta "R" = R
+func delta "U" = U
+func delta "D" = D
+
+func in_side "L" = 0bb0001
+func in_side "R" = 0bb0010
+func in_side "U" = 0bb0100
+func in_side "D" = 0bb1000
+
+func out_side "R" = 0bb0001
+func out_side "L" = 0bb0010
+func out_side "D" = 0bb0100
+func out_side "U" = 0bb1000
+
+func move pos d:n:_ = pos + n * delta d
+
+proc main!() {
+    let instructions = [d:cast n:c for line in readlines!() and {| 1 => d, 2 => n, 3 => c, .._ |} = line_regex::matches line]
+    let coords = scan move 0i0 instructions
+    let min_x = fold min 0 <| map re coords
+    let max_x = fold max 0 <| map re coords
+    let min_y = fold min 0 <| map im coords
+    let max_y = fold max 0 <| map im coords
+
+    let width = max_x - min_x
+    let height = max_y - min_y
+
+    let grid = repeat (height + 1) (repeat (width + 1) 0bb0000 |> collect array) |> (iter::map (fn x. [..x])) |> collect array
+
+    let start = -min_x * R - min_y * D
+    let mut pos = start
+    for d:n:_ in instructions {
+        for _ in range 1 n {
+            grid.(im pos).(re pos) |= out_side d
+            pos += delta d
+            grid.(im pos).(re pos) |= in_side d
+        }
+    }
+
+    let mut inout = [[0bb0000 for _ in row] for row in grid]
+
+    for y in rangex 0 height {
+        let mut is_in = 0bb00
+        for x in rangex 0 width {
+            is_in ^= (grid.y.x) & 0bb11
+            grid.y.x |= is_in
+        }
+    }
+
+    for x in rangex 0 width {
+        let mut is_in = 0bb00
+        for y in rangex 0 height {
+            is_in ^= ((grid.y.x) <~ 2) & 0bb11
+            grid.y.x |= is_in ~> 2
+        }
+    }
+
+    let total = grid
+        |> flatmap (filter ((!=) 0bb0000))
+        |> length
+    println!(total)
+}
