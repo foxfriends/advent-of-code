@@ -1,0 +1,158 @@
+module io at "trilogy:io" use println, readlines
+module regex at "trilogy:regex"
+module tuple at "trilogy:tuple"
+module num at "trilogy:num" use im, re, min, max, cast, parse_int
+module str at "trilogy:str" use joined, take, skip
+module array at "trilogy:array" use fold, map, flatmap, length, filter, sort, position
+module iter at "trilogy:iter" use repeat, collect, range, rangex, of
+
+const line_regex = regex::new "([LRUD]) (\\d+) \\(#([a-f0-9]{6})\\)"
+
+func scan f i [] = [i]
+func scan f i [x, ..xs] = let a = f i x, [a, ..scan f a xs]
+
+const L = -1
+const R = 1
+const U = -0i1
+const D = 0i1
+
+func delta "L" = L
+func delta "R" = R
+func delta "U" = U
+func delta "D" = D
+
+func in_side ^L = 0bb0001
+func in_side ^R = 0bb0010
+func in_side ^U = 0bb0100
+func in_side ^D = 0bb1000
+
+func out_side ^R = 0bb0001
+func out_side ^L = 0bb0010
+func out_side ^D = 0bb0100
+func out_side ^U = 0bb1000
+
+func move pos (d:n) = pos + d * n
+
+func parse_dir "0" = delta "R"
+func parse_dir "1" = delta "D"
+func parse_dir "2" = delta "L"
+func parse_dir "3" = delta "U"
+
+func parse c = parse_dir (skip 5 c) : parse_int 16 (take 5 c)
+
+func fmt 0bb1111 = "+"
+func fmt 0bb0011 = "-"
+func fmt 0bb0001 = "-"
+func fmt 0bb0010 = "-"
+func fmt 0bb0111 = "T"
+func fmt 0bb1011 = "W"
+func fmt 0bb1100 = "|"
+func fmt 0bb0100 = "|"
+func fmt 0bb1000 = "|"
+func fmt 0bb1110 = "3"
+func fmt 0bb1101 = "E"
+func fmt 0bb1001 = "L"
+func fmt 0bb0101 = "F"
+func fmt 0bb0110 = "7"
+func fmt 0bb1010 = "J"
+func fmt _ = "."
+
+func has x b = (x & b) == b
+
+proc main!() {
+    let instructions = [parse c for line in readlines!() and {| 3 => c, .._ |} = line_regex::matches line]
+    let coords = scan move 0i0 instructions
+    let xs = sort (<=) [x for x in [| re coord for coord in coords |]]
+    let ys = sort (<=) [y for y in [| im coord for coord in coords |]]
+
+    let width = length xs
+    let height = length ys
+
+    let start_x = position ((==) 0) xs
+    let start_y = position ((==) 0) ys
+
+    let grid = repeat width 0bb0000 |> collect array
+        |> repeat height
+        |> (iter::map (fn x. [..x])) # clone array
+        |> collect array
+
+    let mut pos = start_x * R + start_y * D
+    for d:n in instructions {
+        let mut travelled = 0
+        while travelled != d * n {
+            grid.(im pos).(re pos) |= out_side d
+            let prev_x = xs.(re pos)
+            let prev_y = ys.(im pos)
+            pos += d
+            let new_x = xs.(re pos)
+            let new_y = ys.(im pos)
+            travelled += (new_x - prev_x) * R + (new_y - prev_y) * D
+            grid.(im pos).(re pos) |= in_side d
+        }
+    }
+
+    for y in rangex 0 height {
+        let mut is_in = 0bb00
+        for x in rangex 0 width {
+            is_in ^= 0bb11 & (grid.y.x)
+            grid.y.x |= is_in
+        }
+    }
+
+    for x in rangex 0 width {
+        let mut is_in = 0bb00
+        for y in rangex 0 height {
+            is_in ^= 0bb11 & ((grid.y.x) <~ 2)
+            grid.y.x |= (0bb0000 | is_in) ~> 2
+        }
+    }
+
+    for line in grid {
+        for bits in line {
+            io::print!(fmt bits)
+        }
+        println!("")
+    }
+
+    let is_solid = (fn x y.
+        with (has (grid.y.x) 0bb0101)
+            && (has (grid.y.(x+1)) 0bb0110)
+            && (has (grid.(y+1).x) 0bb1001)
+            && (has (grid.(y+1).(x+1)) 0bb1010)
+        else cancel false
+    )
+    let is_hollow = (fn x y.
+        with (has (grid.y.x) 0bb0101)
+            && (has (grid.y.(x+1)) 0bb0010)
+            && (has (grid.(y + 1).x) 0bb1000)
+        else cancel false
+    )
+    let is_left = (fn x y.
+        with (has (grid.y.x) 0bb0001) && (has (grid.y.(x+1)) 0bb0010)
+        else cancel false
+    )
+    let is_top = (fn x y.
+        with (has (grid.y.x) 0bb0100) && (has (grid.(y+1).x) 0bb1000)
+        else cancel false
+    )
+    let total = (do() $(x:y for y in rangex 0 height and x in rangex 0 width))
+        |> iter::map (fn x:y.
+            let x_min = xs.x,
+            let x_max = (with xs.(x + 1) else cancel x_min + 1),
+            let y_min = ys.y,
+            let y_max = (with ys.(y + 1) else cancel y_min + 1),
+            if is_solid x y
+            then (x_max - x_min) * (y_max - y_min)
+            else if is_hollow x y
+            then (x_max - x_min) + (y_max - y_min) - 1
+            else if is_left x y
+            then (x_max - x_min)
+            else if is_top x y
+            then (y_max - y_min)
+            else if has (grid.y.x) 0bb1010
+            then 1
+            else 0
+        )
+        |> iter::sum
+    println!(total)
+}
