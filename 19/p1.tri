@@ -1,0 +1,53 @@
+module io at "trilogy:io" use println, readlines
+module array at "trilogy:array" use map, filter, fold
+module num at "trilogy:num" use cast
+module str at "trilogy:str" use chomp, split
+module regex at "trilogy:regex"
+
+const workflow_regex = regex::new "(?<name>\\w+)\\{(?<steps>.*)\\}"
+const step_regex = regex::new "(?<comp>[xmas])(?<op>[<>])(?<val>\\d+)"
+
+func always x _ = x
+
+func part_total {| "x" => x, "m" => m, "a" => a, "s" => s |} = x + m + a + s
+
+func make_cond key "<" val {| ^key => n, .._ |} = n < val
+func make_cond key ">" val {| ^key => n, .._ |} = n > val
+
+func parse_cond str =
+    let {| "comp" => comp, "op" => op, "val" => val, .._ |} = step_regex::matches str,
+    make_cond comp op (cast val)
+
+func parse_step [x] = always true : x
+func parse_step [cond, step] = parse_cond cond : step
+
+func parse_part "{" <> str <> "}" = {| key => cast value for [key, value] in str |> split "," |> map (split "=") |}
+
+func parse_workflow str =
+    let {| "name" => name, "steps" => steps, .._ |} = workflow_regex::matches str,
+    name : (steps |> split "," |> map (split ":") |> map parse_step)
+
+func apply_workflow [cond:dest, ..wfs] part =
+    if cond part
+    then dest
+    else apply_workflow wfs part
+
+func apply _ "A" _ = true
+func apply _ "R" _ = false
+func apply wfs wf part =
+    let workflow = wfs.wf,
+    let dest = apply_workflow workflow part,
+    apply wfs dest part
+
+proc main!() {
+    let [workflowstr, partstr] = array::split ((==) "") [chomp line for line in readlines!()]
+    let workflows = {| name => value for workflow in workflowstr and name:value = parse_workflow workflow |}
+
+    println!(
+        partstr
+            |> map parse_part
+            |> filter (apply workflows "in")
+            |> map part_total
+            |> fold (+) 0
+    )
+}
