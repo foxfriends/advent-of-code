@@ -1,0 +1,60 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use chomp, split
+module array at "trilogy:array" use is_empty, push
+module num at "trilogy:num" use lcm
+module iter at "trilogy:iter" use range
+module tuple at "trilogy:tuple" use snd
+
+func parse_node srcdest = let [name, dests] = split " -> " srcdest, name : split ", " dests
+
+func parse "%" <> srcdest = 'flipflop : parse_node srcdest
+func parse "&" <> srcdest = 'conjunction : parse_node srcdest
+func parse "broadcaster -> " <> dests = 'broadcaster : "broadcaster" : split ", " dests
+
+proc main!() {
+    let nodes = {| |}
+    let inputs = {| |}
+    for line in readlines!() {
+        let kind:name:dests = parse <| chomp line
+        nodes.name = kind:dests
+        for dest in dests {
+            inputs.dest = with inputs.dest else cancel []
+            push!(inputs.dest, name)
+        }
+    }
+
+    let intervals = {|
+        "button" => 1:1,
+        "broadcaster" => 1:1,
+    |}
+
+    let mut queue = nodes."broadcaster" |> snd
+    while !(is_empty queue) {
+        let [node, ..qq] = queue
+        queue = qq
+        if node == "rx" { continue }
+
+        match nodes.node
+            case 'flipflop(dests) {
+                # If an input of the flipflop is not resolved, that means there's a feedback loop from this
+                # node to itself.
+                let input_intervals = with [intervals.input for input in inputs.node] else resume 1:2
+                intervals.node = interval
+                queue = [..queue, ..dests]
+            }
+            case 'conjunction(dests) {
+                let input_intervals = with [intervals.input for input in inputs.node] else invert {
+                    # if there is some input not yet resolved, delay this node. a conjunction looping
+                    # on itself will never light anyway, so I assume it's not in the input, so this
+                    # won't loop forever
+                    push!(queue, node)
+                    continue
+                }
+                let interval = input_intervals |> fold lcm 1
+                intervals.node = interval
+                queue = [..queue, ..dests]
+            }
+    }
+
+    println!(inputs."rx" |> fold (min << fst << (.) intervals) intervals)
+}
