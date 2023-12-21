@@ -1,0 +1,80 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use contains, is_empty, position, push, length
+module num at "trilogy:num" use im, re, is_even, is_odd, min
+module record at "trilogy:record" use values
+module iter at "trilogy:iter" use count, filter, rangex
+
+const N = -0i1
+const S = 0i1
+const E = 1
+const W = -1
+
+func get pos grid = with grid.(im pos).(re pos) else cancel '#'
+func adj pos = $(d + pos for d in [N, S, E, W])
+
+func point x y = x * E + y * S
+
+proc main!() {
+    let grid = [chars <| chomp line for line in readlines!()]
+    let start_y = position (contains 'S') grid
+    let start_x = position ((==) 'S') (grid.start_y)
+
+    let is_rock = fn pos. get pos grid == '#'
+    let start = point start_x start_y
+    let min_dists = {| start => 0 |}
+
+    let mut queue = [start]
+
+    while !(is_empty queue) {
+        let [pos, ..qq] = queue
+        queue = qq
+        let prev = min_dists.pos
+        for npos in adj pos and not is is_rock npos {
+            let dist = prev + 1
+            let min_so_far = with min_dists.npos else invert {
+                min_dists.npos = dist
+                push!(queue, npos)
+                continue
+            }
+            if dist < min_so_far {
+                min_dists.npos = dist
+                push!(queue, npos)
+            }
+        }
+    }
+
+    let step_total = 26501365
+    let minor_dist = 65
+    let major_dist = minor_dist * 2 + 1
+    let n          = (step_total - minor_dist) / major_dist
+
+    let evens = {|
+        'inside => (do() values min_dists)
+            |> filter is_even
+            |> filter (fn x. x <= minor_dist)
+            |> count,
+        'outside => (do() values min_dists)
+            |> filter is_even
+            |> filter (fn x. x > minor_dist)
+            |> count,
+    |}
+    let odds = {|
+        'inside => (do() values min_dists)
+            |> filter is_odd
+            |> filter (fn x. x <= minor_dist)
+            |> count,
+        'outside => (do() values min_dists)
+            |> filter is_odd
+            |> filter (fn x. x > minor_dist)
+            |> count,
+    |}
+
+    println!(
+        0
+        + ((n    ) ** 2)   * (evens.'inside + evens.'outside)
+        + ((n + 1) ** 2)   * (odds.'inside + odds.'outside)
+        - ((n + 1)     )   * odds.'outside
+        + ((n    )     )   * evens.'outside
+    )
+}
