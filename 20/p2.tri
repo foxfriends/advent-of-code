@@ -1,60 +1,150 @@
 module io at "trilogy:io" use readlines, println
-module str at "trilogy:str" use chomp, split
-module array at "trilogy:array" use is_empty, push
+module str at "trilogy:str" use chomp, split, fmt
+module array at "trilogy:array" use is_empty, push, all, fold
 module num at "trilogy:num" use lcm
 module iter at "trilogy:iter" use range
-module tuple at "trilogy:tuple" use snd
+module tuple at "trilogy:tuple" use mapsnd
+module record at "trilogy:record" use contains
 
-func parse_node srcdest = let [name, dests] = split " -> " srcdest, name : split ", " dests
+module broadcaster destinations {
+    proc add_input!(_) {}
 
-func parse "%" <> srcdest = 'flipflop : parse_node srcdest
-func parse "&" <> srcdest = 'conjunction : parse_node srcdest
-func parse "broadcaster -> " <> dests = 'broadcaster : "broadcaster" : split ", " dests
-
-proc main!() {
-    let nodes = {| |}
-    let inputs = {| |}
-    for line in readlines!() {
-        let kind:name:dests = parse <| chomp line
-        nodes.name = kind:dests
-        for dest in dests {
-            inputs.dest = with inputs.dest else cancel []
-            push!(inputs.dest, name)
+    proc init!() {
+        for dest in destinations {
+            yield 'init(dest)
         }
     }
 
-    let intervals = {|
-        "button" => 1:1,
-        "broadcaster" => 1:1,
-    |}
-
-    let mut queue = nodes."broadcaster" |> snd
-    while !(is_empty queue) {
-        let [node, ..qq] = queue
-        queue = qq
-        if node == "rx" { continue }
-
-        match nodes.node
-            case 'flipflop(dests) {
-                # If an input of the flipflop is not resolved, that means there's a feedback loop from this
-                # node to itself.
-                let input_intervals = with [intervals.input for input in inputs.node] else resume 1:2
-                intervals.node = interval
-                queue = [..queue, ..dests]
-            }
-            case 'conjunction(dests) {
-                let input_intervals = with [intervals.input for input in inputs.node] else invert {
-                    # if there is some input not yet resolved, delay this node. a conjunction looping
-                    # on itself will never light anyway, so I assume it's not in the input, so this
-                    # won't loop forever
-                    push!(queue, node)
-                    continue
-                }
-                let interval = input_intervals |> fold lcm 1
-                intervals.node = interval
-                queue = [..queue, ..dests]
-            }
+    proc signal!(_) {
+        for dest in destinations {
+            yield 'low(dest)
+        }
     }
 
-    println!(inputs."rx" |> fold (min << fst << (.) intervals) intervals)
+    export add_input, init, signal
+}
+
+module flipflop destinations {
+    const state = {| 'on => false |}
+
+    proc add_input!(_) {}
+
+    proc init!() {
+        for dest in destinations {
+            yield 'init(dest)
+        }
+    }
+
+    proc signal!(signal) {
+        match signal
+            case 'low(_) {
+                if state.'on {
+                    state.'on = false
+                    for dest in destinations {
+                        yield 'low(dest)
+                    }
+                } else {
+                    state.'on = true
+                    for dest in destinations {
+                        yield 'high(dest)
+                    }
+                }
+            }
+            case 'high {}
+    }
+
+    export add_input, init, signal
+}
+
+module conjunction destinations {
+    const state = {||}
+
+    proc add_input!(input) {
+        state.input = 'low
+    }
+
+    proc init!() {
+        for dest in destinations {
+            yield 'init(dest)
+        }
+    }
+
+    proc signal!(signal) {
+        match signal
+            case 'low(input) {
+                state.input = 'low
+            }
+            case 'high(input) {
+                state.input = 'high
+            }
+        for _:value in state {
+            if value == 'low {
+                for dest in destinations {
+                    yield 'high(dest)
+                }
+                return
+            }
+        }
+        for dest in destinations {
+            yield 'low(dest)
+        }
+    }
+
+    export add_input, init, signal
+}
+
+const important = ["mp", "qt", "qb", "ng"]
+
+func parse_node srcdest = let [name, dests] = split " -> " srcdest, name : split ", " dests
+
+func parse "%" <> srcdest = parse_node srcdest |> (fn n:x.n:flipflop x)
+func parse "&" <> srcdest = parse_node srcdest |> (fn n:x.n:conjunction x)
+func parse "broadcaster -> " <> dests = "broadcaster" : broadcaster (split ", " dests)
+
+proc main!() {
+    let nodes = {| |}
+    for line in readlines!() {
+        let name:node = parse <| chomp line
+        nodes.name = node
+    }
+
+    for name:node in nodes {
+        with { node::init!() }
+            when 'init(dest) resume (with (nodes.dest)::add_input!(name) else cancel unit)
+            else yield
+    }
+
+    let keys = {| |}
+
+    let mut presses = 0
+    while !(all (fn x. contains x keys) important) {
+        presses += 1
+        let mut queue = ["button":'low("broadcaster")]
+        while !(is_empty queue) {
+            let [src:msg, ..rest] = queue
+            let 'low(dest) or 'high(dest) = msg
+            queue = rest
+            with {
+                match msg
+                    case 'low(_) {
+                        (nodes.dest)::signal!('low(src))
+                    }
+                    case 'high(_) {
+                        if is ^src in important {
+                            keys.src = presses
+                        }
+                        (nodes.dest)::signal!('high(src))
+                    }
+            } when 'low(tgt) invert {
+                push!(queue, dest:'low(tgt))
+                cancel resume unit
+            } when 'high(tgt) invert {
+                push!(queue, dest:'high(tgt))
+                cancel resume unit
+            } when 'MIA cancel unit
+            else yield
+        }
+    }
+
+    println!(fold lcm 1 [val for _:val in keys])
 }
