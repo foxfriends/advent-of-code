@@ -1,0 +1,51 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use contains, is_empty, position, push, length
+module num at "trilogy:num" use im, re, is_even, min
+module record at "trilogy:record" use values
+module iter at "trilogy:iter" use count, filter, rangex
+
+const N = -0i1
+const S = 0i1
+const E = 1
+const W = -1
+
+func get pos grid = with grid.(im pos).(re pos) else cancel '#'
+func adj pos = $(d + pos for d in [N, S, E, W])
+
+proc main!() {
+    let grid = [chars <| chomp line for line in readlines!()]
+    let start_y = position (contains 'S') grid
+    let start_x = position ((==) 'S') (grid.start_y)
+
+    let is_rock = fn pos. get pos grid == '#'
+    let start = start_x * E + start_y * S
+    let min_dists = {| start => 0 |}
+
+    let mut queue = [start]
+
+    while !(is_empty queue) {
+        let [pos, ..qq] = queue
+        queue = qq
+        let prev = min_dists.pos
+        if prev >= 64 { continue }
+        for npos in adj pos and not is is_rock npos {
+            let dist = prev + 1
+            let min_so_far = with min_dists.npos else invert {
+                min_dists.npos = dist
+                push!(queue, npos)
+                continue
+            }
+            if dist < min_so_far {
+                min_dists.npos = dist
+                push!(queue, npos)
+            }
+        }
+    }
+
+    println!(
+        (do() values min_dists)
+        |> filter is_even
+        |> count
+    )
+}
