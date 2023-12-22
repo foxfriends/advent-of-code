@@ -1,9 +1,9 @@
 module io at "trilogy:io" use println, readlines
-module str at "trilogy:str" use chomp
+module str at "trilogy:str" use chomp, fmt
 module num at "trilogy:num" use abs, max, cast
 module tuple at "trilogy:tuple" use fst, snd
-module array at "trilogy:array" use sort, fold, all
-module set at "trilogy:set" use length, insert
+module array at "trilogy:array" use sort, fold, all, reverse, push
+module set at "trilogy:set" use length, insert, subtract, union
 module regex at "trilogy:regex"
 module iter at "trilogy:iter" use range
 
@@ -46,7 +46,7 @@ proc main!() {
 
         supporting.block = [||]
         for support in fall_on {
-            supporting.support = insert block (supporting.support)
+            supporting.support insert= block
         }
         supported_by.block = fall_on
         for coord in plane {
@@ -54,11 +54,23 @@ proc main!() {
         }
     }
 
-    let mut dissolvable = 0
-    for supporter:supported in supporting {
-        if all (fn x. length (supported_by.x) >= 2) [x for x in supported] {
-            dissolvable += 1
+    let will_fall = {| |}
+
+    for block in reverse blocks {
+        let mut queue = [block]
+        let mut did_fall = [||]
+        for falling in queue {
+            for supported in supporting.falling {
+                if length (subtract (supported_by.supported) [|block, ..did_fall|]) == 0 {
+                    did_fall insert= supported
+                    push!(queue, supported)
+                }
+            }
+        }
+        if length did_fall != 0 {
+            will_fall.block = did_fall
         }
     }
-    println!(dissolvable)
+
+    println!(fold (+) 0 [length v for _:v in will_fall])
 }
