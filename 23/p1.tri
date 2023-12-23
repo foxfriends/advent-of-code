@@ -1,0 +1,65 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, chars
+module num at "trilogy:num" use im, re
+module array at "trilogy:array" use last, position, is_empty, push
+module set at "trilogy:set" use contains, length
+module tuple at "trilogy:tuple" use fst
+
+const N = -0i1
+const S = 0i1
+const E = 1
+const W = -1
+
+func walkable ^E '>' = true
+func walkable ^W '<' = true
+func walkable ^N '^' = true
+func walkable ^S 'v' = true
+func walkable  _ '.' = true
+func walkable  _  _  = false
+
+func sloped_in ^E '>' = true
+func sloped_in ^W '<' = true
+func sloped_in ^N '^' = true
+func sloped_in ^S 'v' = true
+func sloped_in  _  _  = false
+
+func get pos grid = with grid.(im pos).(re pos) else cancel '#'
+
+func max_by f a b = if f a >= f b then a else b
+
+proc main!() {
+    let grid = [chars <| chomp line for line in readlines!()]
+    let goal = (array::length grid - 1) * S + (position ((==) '.') <| last grid) * E
+
+    let is_merge = fn pos. array::length [1 for dir in [N, E, S, W] and is sloped_in dir (get (pos - dir) grid)] >= 2
+
+    let dist = {| E => [| E |] |}
+    let mut queue = [E:S]
+    let mut deferred = {||}
+    while !(is_empty queue) {
+        let [here:prev, ..qq] = queue
+        queue = qq
+        let current_path = dist.here
+
+        for dir in [N, E, S, W]
+        and is dir != -prev
+        and pos = dir + here
+        and is walkable dir (get pos grid) {
+            let new_path = [| pos, ..current_path |]
+            if is_merge pos {
+                let prev = with deferred.pos else invert {
+                    deferred.pos = new_path:dir
+                    continue
+                }
+                let path:from_dir = max_by (length << fst) (new_path:dir) prev
+                dist.pos = path
+                push!(queue, pos:from_dir)
+            } else {
+                dist.pos = new_path
+                push!(queue, pos:dir)
+            }
+        }
+    }
+
+    println!((length <| dist.goal) - 1)
+}
