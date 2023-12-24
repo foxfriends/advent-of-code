@@ -1,0 +1,67 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, chars, fmt
+module num at "trilogy:num" use im, re
+module array at "trilogy:array" use last, position, is_empty, push
+module set at "trilogy:set" use contains, length, insert
+module tuple at "trilogy:tuple" use fst
+
+const N = -0i1
+const S = 0i1
+const E = 1
+const W = -1
+
+func walkable '#' = false
+func walkable  _  = true
+
+func dirmatch ^N '^' = true
+func dirmatch ^E '>' = true
+func dirmatch ^S 'v' = true
+func dirmatch ^W '<' = true
+func dirmatch  _ '.' = true
+func dirmatch  _  _  = false
+
+func get pos grid = with grid.(im pos).(re pos) else cancel '#'
+
+func max_by f a b = if f a >= f b then a else b
+
+proc main!() {
+    let grid = [chars <| chomp line for line in readlines!()]
+    let goal = (array::length grid - 1) * S + (position ((==) '.') <| last grid) * E
+
+    let is_node = (
+        fn pos. pos == E
+        || pos == goal
+        || (array::length [1 for dir in [N, E, S, W] and is walkable (get (pos - dir) grid)] >= 3)
+    )
+
+    let graph = {|
+        E => {| |},
+        goal => {| |},
+    |}
+
+    let mut queue = [E]
+    while !(is_empty queue) {
+        let [here, ..qq] = queue
+        queue = qq
+
+        for dir in [N, E, S, W] and is dirmatch dir (get (here + dir) grid) {
+            let mut pos = here + dir
+            let mut path = [| here, pos |]
+            while !(is_node pos) {
+                for d2 in [N, E, S, W] and is walkable (get (pos + d2) grid) and is !(contains (pos + d2) path) {
+                    pos += d2
+                    path insert= pos
+                    break
+                }
+            }
+            graph.pos = with graph.pos else invert {
+                push!(queue, pos)
+                cancel {| |}
+            }
+            graph.here.pos = length path - 1
+            graph.pos.here = length path - 1
+        }
+    }
+
+
+}
