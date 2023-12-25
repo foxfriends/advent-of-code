@@ -1,0 +1,22 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, split
+module array at "trilogy:array" use fold
+module record at "trilogy:record" use insert
+
+func over 0 f [x, ..xs] = [f x, ..xs]
+func over i f [x, ..xs] = [x, ..over (i - 1) f xs]
+
+func parse line = line
+    |> split ": "
+    |> over 1 (split " ")
+
+func into_graph rec a:b = insert a b (insert b a rec)
+
+proc main!() {
+    let edges = [f:t for line in readlines!() and [f, ts] = parse <| chomp line and t in ts]
+    let graph = fold into_graph {||} edges
+    let nodes = [k for k:_ in graph]
+
+    println!(array::length nodes)
+    println!(array::length edges)
+}
