@@ -1,8 +1,9 @@
 module io at "trilogy:io" use println, readlines
 module str at "trilogy:str" use chomp, chars, fmt
-module num at "trilogy:num" use im, re
-module array at "trilogy:array" use last, position, is_empty, push
+module num at "trilogy:num" use im, re, max
+module array at "trilogy:array" use last, position, is_empty, push, filter
 module set at "trilogy:set" use contains, length, insert
+module record at "trilogy:record"
 module tuple at "trilogy:tuple" use fst
 
 const N = -0i1
@@ -23,6 +24,16 @@ func dirmatch  _  _  = false
 func get pos grid = with grid.(im pos).(re pos) else cancel '#'
 
 func max_by f a b = if f a >= f b then a else b
+
+func path_length _ [_] = 0
+func path_length g [f, t, ..ps] = g.f.t + path_length g [t, ..ps]
+
+rule path(graph, [.._, s] and p, s, p)
+rule path(graph, [.._, s] and prefix, e, p) <-
+    k:_ in graph.s
+    and not is array::contains k prefix
+    and v2 = [..prefix, k]
+    and path(graph, v2, e, p)
 
 proc main!() {
     let grid = [chars <| chomp line for line in readlines!()]
@@ -63,5 +74,13 @@ proc main!() {
         }
     }
 
-
+    let mut best = 0
+    let prefix = [E]
+    let n = record::length graph
+    for path(^graph, ^prefix, ^goal, p) {
+        println!(p)
+        best = max best (path_length graph p)
+        println!(best)
+    }
+    println!(best)
 }
