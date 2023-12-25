@@ -11,11 +11,11 @@ func always x _ = x
 
 func part_total {| "x" => x, "m" => m, "a" => a, "s" => s |} = x + m + a + s
 
-func make_cond key "<" val {| ^key => n, .._ |} = n < val
-func make_cond key ">" val {| ^key => n, .._ |} = n > val
+func make_cond key "<" val {| ^key => n, .. |} = n < val
+func make_cond key ">" val {| ^key => n, .. |} = n > val
 
 func parse_cond str =
-    let {| "comp" => comp, "op" => op, "val" => val, .._ |} = step_regex::matches str,
+    let {| "comp" => comp, "op" => op, "val" => val, .. |} = step_regex::matches str,
     make_cond comp op (cast val)
 
 func parse_step [x] = always true : x
@@ -24,7 +24,7 @@ func parse_step [cond, step] = parse_cond cond : step
 func parse_part "{" <> str <> "}" = {| key => cast value for [key, value] in str |> split "," |> map (split "=") |}
 
 func parse_workflow str =
-    let {| "name" => name, "steps" => steps, .._ |} = workflow_regex::matches str,
+    let {| "name" => name, "steps" => steps, .. |} = workflow_regex::matches str,
     name : (steps |> split "," |> map (split ":") |> map parse_step)
 
 func apply_workflow [cond:dest, ..wfs] part =
