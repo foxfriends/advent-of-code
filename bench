@@ -6,7 +6,7 @@ for i in "1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "13" "14" "15" "16" "17" 
     echo "---- $run_name ----" >> "./$i/out"
     echo "---- $run_name ----" >> "./$i/err"
     { time trilogy run "./$i/p1.tri" < "./$i/input" ; } 2>> "./$i/err" >> "./$i/out"
-    if [ -f "./$i/p2.tri" ]
+    if [ -f "./$i/p2.tri" ]; then
         { time trilogy run "./$i/p2.tri" < "./$i/input" ; } 2>> "./$i/err" >> "./$i/out"
     fi
 done
