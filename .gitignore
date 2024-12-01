@@ -3,3 +3,7 @@ sample
 .env
 err
 out
+*.hi
+*.o
+p1
+p2
