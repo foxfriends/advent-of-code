@@ -12,4 +12,4 @@ isSafe xs = isSafe_ (<) xs || isSafe_ (>) xs || isLessSafe_ (<) (drop 1 xs) || i
 
 answer = length . filter isSafe . fmap (fmap read . words) . lines
 
-main = (show . answer) <$> getContents >>= putStrLn
+main = getContents >>= print . answer

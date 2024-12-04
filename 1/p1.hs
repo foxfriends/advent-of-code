@@ -8,4 +8,4 @@ absdiff (a, b) = abs (a - b)
 
 answer = sum . fmap absdiff . uncurry zip . both sort . unzip . fmap (both read . toPair . words) . lines
 
-main = (show . answer) <$> getContents >>= putStrLn
+main = getContents >>= print . answer

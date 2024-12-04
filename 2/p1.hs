@@ -8,4 +8,4 @@ isSafe xs = isSafe_ (<) xs || isSafe_ (>) xs
 
 answer = length . filter isSafe . fmap (fmap read . words) . lines
 
-main = (show . answer) <$> getContents >>= putStrLn
+main = getContents >>= print . answer

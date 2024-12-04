@@ -18,4 +18,4 @@ similarity lhs rhs = fmap score lhs
     counts = count rhs
     score v = v * findWithDefault 0 v counts
 
-main = (show . answer) <$> getContents >>= putStrLn
+main = getContents >>= print . answer
