@@ -7,8 +7,6 @@ at x y = reader ((!? x) <=< (!? y))
 
 isMas x = x == "MAS" || x == "SAM"
 
-orr a b c = a c || b c
-
 crossAt x y = sequence <$> sequence [readWord 1 1, readWord 1 (-1)]
   where
     readWord dx dy = sequence <$> sequence [at (x - dx) (y - dy), at x y, at (x + dx) (y + dy)]
