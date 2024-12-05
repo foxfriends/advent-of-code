@@ -1,30 +1,17 @@
 import Control.Monad
 import Control.Monad.Reader
 import Data.List
+import Data.Maybe
 
 at x y = reader ((!? x) <=< (!? y))
 
-nextIndex x y = reader (iterateGrid x y)
+spokesAt x y = sequence [readWord x y | y <- [-1 .. 1], x <- [-1 .. 1], (x, y) /= (0, 0)]
   where
-    iterateGrid x y grid | x + 1 < length (grid !! y) = Just (x + 1, y)
-    iterateGrid x y grid | x + 1 == length (grid !! y), y + 1 < length grid = Just (0, y + 1)
-    iterateGrid _ _ _ = Nothing
+    readWord dx dy = sequence <$> sequence [at (x + i * dx) (y + i * dy) | i <- [0 .. 3]]
 
-xmasesFrom x y =
-  length . filter (Just "XMAS" ==) <$> sequence spokes
+answer input = length $ filter ("XMAS" ==) $ catMaybes $ concat $ runReader (mapM (uncurry spokesAt) everywhere) grid
   where
-    spokes = [readWord 0 1, readWord 1 0, readWord 0 (-1), readWord (-1) 0, readWord (-1) (-1), readWord (-1) 1, readWord 1 (-1), readWord 1 1]
-    readWord dx dy = sequence <$> sequence [at x y, at (x + dx) (y + dy), at (x + 2 * dx) (y + 2 * dy), at (x + 3 * dx) (y + 3 * dy)]
-
-readXmas = readXmas_ 0 0
-  where
-    readXmas_ x y = do
-      count <- xmasesFrom x y
-      next <- nextIndex x y
-      case next of
-        Just (xx, yy) -> (+) count <$> readXmas_ xx yy
-        Nothing -> return count
-
-answer = runReader readXmas . lines
+    grid = lines input
+    everywhere = [(x, y) | y <- [0 .. length grid - 1], x <- [0 .. length (grid !! y) - 1]]
 
 main = getContents >>= print . answer
