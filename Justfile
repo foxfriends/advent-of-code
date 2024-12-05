@@ -9,6 +9,7 @@ all:
     #!/usr/bin/env fish
     for file in (ls)
         if test -d $file
+            echo "Day $file"
             just run $file
         end
     end
