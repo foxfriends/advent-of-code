@@ -10,7 +10,7 @@ orderingRule = do
   rhs <- int
   return (lhs, rhs)
 
-updateRule = int `sepBy` char ','
+updateSpec = int `sepBy` char ','
 
 isCorrect rules pages = and [(y, pages !! i) `notElem` rules | i <- [0 .. length pages - 1], y <- drop (i + 1) pages]
 
@@ -24,6 +24,6 @@ answer input = sum $ middle . fix pageOrder <$> filter (not . isCorrect pageOrde
   where
     (rulestr, "" : updatestr) = break ("" ==) $ lines input
     Right pageOrder = mapM (parse orderingRule "") rulestr
-    Right updates = mapM (parse updateRule "") updatestr
+    Right updates = mapM (parse updateSpec "") updatestr
 
 main = getContents >>= print . answer
