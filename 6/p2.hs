@@ -1,10 +1,7 @@
 import Control.Monad
 import Control.Monad.State
-import Data.Function
 import Data.List
-import Data.Set (Set)
 import Data.Set qualified as Set
-import Debug.Trace
 
 up = (0, -1)
 
@@ -13,59 +10,69 @@ turn (1, 0) = (0, 1)
 turn (0, 1) = (-1, 0)
 turn (-1, 0) = (0, -1)
 
-unturn (1, 0) = (0, -1)
-unturn (0, 1) = (1, 0)
-unturn (-1, 0) = (0, 1)
-unturn (0, -1) = (-1, 0)
-
 move (dx, dy) (x, y) = (x + dx, y + dy)
 
-runToEnd pos dir = do
-  atpos <- uncurry at pos
-  case atpos of
-    Nothing -> return []
-    Just '#' -> return []
-    _ -> (pos :) <$> runToEnd (move dir pos) dir
+mapsnd f (x, y) = (x, f y)
 
-at :: Int -> Int -> State ([String], Set ((Int, Int), (Int, Int))) (Maybe Char)
 at x y = gets $ ((!? x) <=< (!? y)) . fst
 
-watch dir poss = do
-  (map, watching) <- get
-  put (map, foldl (flip Set.insert) watching $ fmap (flip (,) dir) poss)
+visit point = modify (mapsnd $ Set.insert point)
+
+been point = gets $ elem point . snd
 
 next pos dir = do
   predict <- uncurry at (move pos dir)
   case predict of
-    Just '#' -> do
-      next pos (turn dir)
+    Just '#' -> next pos (turn dir)
     Just _ -> return $ Just (move pos dir, dir)
     Nothing -> return Nothing
 
 guardMove pos dir '#' = let newdir = turn dir in (move newdir pos, newdir)
 guardMove pos dir _ = (move dir pos, dir)
 
-guardWalk :: (Int, Int) -> (Int, Int) -> State ([String], Set ((Int, Int), (Int, Int))) Int
 guardWalk pos dir = do
-  watching <- gets (snd)
-  watchFront <- runToEnd pos dir
-  watchBack <- runToEnd pos (turn $ turn dir)
-  watch (unturn dir) (watchFront ++ watchBack)
-  path <- runToEnd pos dir
-  let end = last path
-      candidates = traceShowId $ filter (\a -> (a, dir) `elem` watching) path
-   in do
-        dest <- next (last path) dir
-        case dest of
-          Nothing -> return $ length candidates
-          Just (newpos, newdir) -> do
-            rest <- guardWalk newpos newdir
-            return $ length candidates + rest
+  dest <- next pos dir
+  case dest of
+    Nothing -> return [pos]
+    Just (newpos, newdir) -> do
+      rest <- guardWalk newpos newdir
+      return (pos : rest)
 
-answer contents = evalState (guardWalk (startX, startY) up) (input, Set.empty)
+run pos dir = do
+  predict <- uncurry at (move pos dir)
+  case predict of
+    Just '#' -> return pos
+    Nothing -> return pos
+    Just _ -> run dest dir
   where
+    dest = move pos dir
+
+guardLoops pos dir = do
+  hasBeen <- been (pos, dir)
+  visit (pos, dir)
+  if hasBeen
+    then return True
+    else do
+      end <- run pos dir
+      dest <- next end dir
+      case dest of
+        Nothing -> return False
+        Just (newpos, newdir) -> guardLoops newpos newdir
+
+modifyAt 0 f (x : xs) = f x : xs
+modifyAt n f (x : xs) = x : modifyAt (n - 1) f xs
+
+answer contents =
+  length $ filter (evalState (guardLoops start up)) $ fmap toState $ fmap blockAt $ nub $ evalState (guardWalk start up) (input, undefined)
+  where
+    toState input = (input, Set.empty)
+    blockAt (pos@(x, y))
+      | pos /= start = modifyAt y (modifyAt x (const '#')) input
+      | otherwise = input
+
     input = lines contents
     Just startY = findIndex (elem '^') input
     Just startX = elemIndex '^' (input !! startY)
+    start = (startX, startY)
 
 main = getContents >>= print . answer

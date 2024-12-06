@@ -25,7 +25,7 @@ do part input:
     #!/usr/bin/env fish
     if test -f {{part}}.hs
         ghc {{part}} -outputdir.{{part}} > /dev/null
-        time ./{{part}} < {{input}}
+        and time ./{{part}} < {{input}}
     else if test -f {{part}}.fish
         time ./{{part}}.fish < {{input}}
     end
