@@ -1,7 +1,0 @@
-#!/bin/bash
-mkdir -p $1
-export $(cat .env | xargs)
-curl https://adventofcode.com/2024/day/$1/input \
-    -X GET \
-    -H "Cookie: session=$session" \
-    -o $1/input
