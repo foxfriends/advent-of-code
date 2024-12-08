@@ -1,14 +1,26 @@
-import Data.Bits
+import Control.Monad
+import Data.Functor
+import Data.Maybe
+import Debug.Trace
 import Text.Parsec
 
 int = read <$> many digit
 
-apply _ [ans] = ans
-apply n (x : y : rest)
-  | testBit n 0 = apply (n `shiftR` 1) (x + y : rest)
-  | otherwise = apply (n `shiftR` 1) (x * y : rest)
+countdigits n
+  | n < 10 = 1
+  | otherwise = 1 + countdigits (n `div` 10)
 
-solvable answer terms = or [answer == apply i terms | i :: Int <- [0 .. 2 ^ (length terms - 1) - 1]]
+apply :: (Int -> Int -> Int) -> [Int] -> [Int]
+apply op (x : y : rest) = op x y : rest
+
+findAnswer ans [a]
+  | a == ans = [()]
+  | otherwise = []
+findAnswer ans terms = do
+  apd <- apply <$> [(+), (*)] <*> [terms]
+  findAnswer ans apd
+
+solvable = not . null . uncurry findAnswer
 
 equation = do
   answer <- int
@@ -17,7 +29,7 @@ equation = do
   terms <- int `sepBy` char ' '
   return (answer, terms)
 
-compute = sum . fmap fst . filter (uncurry solvable) <$> equation `sepEndBy` newline
+compute = sum . fmap fst . filter solvable <$> equation `sepEndBy` newline
 
 answer input = ans
   where

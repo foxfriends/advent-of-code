@@ -1,4 +1,7 @@
-import Data.Bits
+import Control.Monad
+import Data.Functor
+import Data.Maybe
+import Debug.Trace
 import Text.Parsec
 
 int = read <$> many digit
@@ -7,18 +10,21 @@ countdigits n
   | n < 10 = 1
   | otherwise = 1 + countdigits (n `div` 10)
 
-apply [] [ans] = ans
-apply (0 : ops) (x : y : rest) = apply ops (x + y : rest)
-apply (1 : ops) (x : y : rest) = apply ops (x * y : rest)
-apply (2 : ops) (x : y : rest) = apply ops (x * (10 ^ countdigits y) + y : rest)
+glue :: Int -> Int -> Int
+glue x y = x * (10 ^ countdigits y) + y
 
-combinations 0 = [[]]
-combinations n = do
-  next <- combinations (n - 1)
-  op <- [0, 1, 2]
-  return (op : next)
+apply :: (Int -> Int -> Int) -> [Int] -> [Int]
+apply op (x : y : rest) = op x y : rest
 
-solvable answer terms = or [answer == apply ops terms | ops <- combinations (length terms - 1)]
+findAnswer ans [a]
+  | a == ans = [()]
+  | otherwise = []
+findAnswer ans terms = do
+  apd@(part : rest) <- apply <$> [(+), (*), glue] <*> [terms]
+  guard (part <= ans)
+  findAnswer ans apd
+
+solvable = not . null . uncurry findAnswer
 
 equation = do
   answer <- int
@@ -27,7 +33,7 @@ equation = do
   terms <- int `sepBy` char ' '
   return (answer, terms)
 
-compute = sum . fmap fst . filter (uncurry solvable) <$> equation `sepEndBy` newline
+compute = sum . fmap fst . filter solvable <$> equation `sepEndBy` newline
 
 answer input = ans
   where
