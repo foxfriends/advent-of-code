@@ -1,8 +1,8 @@
 import Control.Monad
 import Data.Ix
-import Data.List
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
+import Data.Set qualified as Set
 
 readNodes :: [String] -> Map Char [(Int, Int)]
 readNodes input = Map.fromListWith (++) $ do
@@ -21,11 +21,11 @@ antinodes width height nodes = do
       g = gcd dx dy
       gx = dx `div` g
       gy = dy `div` g
-   in takeWhile (uncurry inGrid) $ [x1, x1 + gx ..] `zip` [y1, y1 + gy ..]
+   in takeWhile inGrid $ [x1, x1 + gx ..] `zip` [y1, y1 + gy ..]
   where
-    inGrid x y = inRange (0, width - 1) x && inRange (0, height - 1) y
+    inGrid = inRange ((0, 0), (width - 1, height - 1))
 
-answer contents = length $ nub $ Map.elems nodes >>= antinodes width height
+answer contents = length $ Set.fromList $ Map.elems nodes >>= antinodes width height
   where
     input = lines contents
     nodes = readNodes input

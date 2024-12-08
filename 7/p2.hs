@@ -1,7 +1,4 @@
 import Control.Monad
-import Data.Functor
-import Data.Maybe
-import Debug.Trace
 import Text.Parsec
 
 int = read <$> many digit
