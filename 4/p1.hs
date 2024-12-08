@@ -1,5 +1,5 @@
 import Control.Monad.Reader
-import Data.Array.IArray
+import Data.Array.Unboxed
 import Data.Maybe
 
 readGrid :: String -> Array (Int, Int) Char
