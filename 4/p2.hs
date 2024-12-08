@@ -3,13 +3,13 @@ import Data.Array.IArray
 import Data.Maybe
 
 readGrid :: String -> Array (Int, Int) Char
-readGrid contents = listArray ((0, 0), (width - 1, height - 1)) $ concat input
+readGrid contents = listArray ((0, 0), (height - 1, width - 1)) $ concat input
   where
     input = lines contents
     width = length (input !! 0)
     height = length input
 
-at x y = reader (flip (!?) (x, y))
+at x y = reader (flip (!?) (y, x))
 
 isMas x = x == "MAS" || x == "SAM"
 
