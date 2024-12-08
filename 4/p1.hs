@@ -9,7 +9,7 @@ readGrid contents = listArray ((0, 0), (height - 1, width - 1)) $ concat input
     width = length (input !! 0)
     height = length input
 
-at x y = reader (flip (!?) (y, x))
+at x y = reader (!? (y, x))
 
 spokesAt x y = sequence [readWord x y | y <- [-1 .. 1], x <- [-1 .. 1], (x, y) /= (0, 0)]
   where

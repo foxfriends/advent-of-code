@@ -1,18 +1,26 @@
 import Control.Monad
 import Control.Monad.Reader
-import Data.List
+import Data.Array.Unboxed
+import Data.List (find)
 import Data.Set qualified as Set
 
-up = (0, -1)
+readGrid :: String -> Array (Int, Int) Char
+readGrid contents = listArray ((0, 0), (height - 1, width - 1)) $ concat input
+  where
+    input = lines contents
+    height = length input
+    width = length (input !! 0)
 
-turn (0, -1) = (1, 0)
-turn (1, 0) = (0, 1)
-turn (0, 1) = (-1, 0)
-turn (-1, 0) = (0, -1)
+up = (-1, 0)
 
-move (dx, dy) (x, y) = (x + dx, y + dy)
+turn (-1, 0) = (0, 1)
+turn (0, 1) = (1, 0)
+turn (1, 0) = (0, -1)
+turn (0, -1) = (-1, 0)
 
-at x y = reader ((!? x) <=< (!? y))
+move (y, x) (dy, dx) = (y + dy, x + dx)
+
+at y x = reader (!? (y, x))
 
 next pos dir = do
   predict <- uncurry at (move pos dir)
@@ -32,10 +40,9 @@ guardWalk pos dir = do
       rest <- guardWalk newpos newdir
       return (pos : rest)
 
-answer contents = length $ Set.fromList $ runReader (guardWalk (startX, startY) up) input
+answer contents = length $ Set.fromList $ runReader (guardWalk start up) grid
   where
-    input = lines contents
-    Just startY = findIndex (elem '^') input
-    Just startX = elemIndex '^' (input !! startY)
+    grid = readGrid contents
+    Just (start, _) = find (('^' ==) . snd) $ assocs grid
 
 main = getContents >>= print . answer

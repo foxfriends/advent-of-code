@@ -9,7 +9,7 @@ readGrid contents = listArray ((0, 0), (height - 1, width - 1)) $ concat input
     width = length (input !! 0)
     height = length input
 
-at x y = reader (flip (!?) (y, x))
+at x y = reader (!? (y, x))
 
 isMas x = x == "MAS" || x == "SAM"
 

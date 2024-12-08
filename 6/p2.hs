@@ -1,20 +1,28 @@
 import Control.Monad
 import Control.Monad.State
-import Data.List
+import Data.Array.Unboxed
+import Data.List (find)
 import Data.Set qualified as Set
 
-up = (0, -1)
+readGrid :: String -> Array (Int, Int) Char
+readGrid contents = listArray ((0, 0), (height - 1, width - 1)) $ concat input
+  where
+    input = lines contents
+    height = length input
+    width = length (input !! 0)
 
-turn (0, -1) = (1, 0)
-turn (1, 0) = (0, 1)
-turn (0, 1) = (-1, 0)
-turn (-1, 0) = (0, -1)
+up = (-1, 0)
 
-move (dx, dy) (x, y) = (x + dx, y + dy)
+turn (-1, 0) = (0, 1)
+turn (0, 1) = (1, 0)
+turn (1, 0) = (0, -1)
+turn (0, -1) = (-1, 0)
+
+move (y, x) (dy, dx) = (y + dy, x + dx)
+
+at y x = gets ((!? (y, x)) . fst)
 
 mapsnd f (x, y) = (x, f y)
-
-at x y = gets $ ((!? x) <=< (!? y)) . fst
 
 visit point = modify (mapsnd $ Set.insert point)
 
@@ -59,20 +67,16 @@ guardLoops pos dir = do
         Nothing -> return False
         Just (newpos, newdir) -> guardLoops newpos newdir
 
-modifyAt 0 f (x : xs) = f x : xs
-modifyAt n f (x : xs) = x : modifyAt (n - 1) f xs
-
 answer contents =
-  length $ filter (evalState (guardLoops start up)) $ fmap toState $ fmap blockAt $ nub $ evalState (guardWalk start up) (input, undefined)
+  length $ filter (evalState (guardLoops start up)) $ fmap (toState . blockAt) $ Set.toList $ Set.fromList $ evalState (guardWalk start up) (grid, undefined)
   where
     toState input = (input, Set.empty)
-    blockAt (pos@(x, y))
-      | pos /= start = modifyAt y (modifyAt x (const '#')) input
-      | otherwise = input
 
-    input = lines contents
-    Just startY = findIndex (elem '^') input
-    Just startX = elemIndex '^' (input !! startY)
-    start = (startX, startY)
+    grid = readGrid contents
+    Just (start, _) = find (('^' ==) . snd) $ assocs grid
+
+    blockAt pos
+      | pos /= start = grid // [(pos, '#')]
+      | otherwise = grid
 
 main = getContents >>= print . answer
