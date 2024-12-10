@@ -12,9 +12,9 @@ readGrid contents = listArray ((0, 0), (height - 1, width - 1)) $ digitToInt <$>
 neighbours (y, x) = [(y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)]
 
 score :: Array (Int, Int) Int -> (Int, Int) -> Int
-score grid = sum . paths 0
+score grid = length . paths 0
   where
-    paths 9 pos = [1]
+    paths 9 pos = [0]
     paths n pos = do
       next <- neighbours pos
       guard $ inRange (bounds grid) next
