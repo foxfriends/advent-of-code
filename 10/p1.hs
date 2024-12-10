@@ -15,14 +15,13 @@ neighbours (y, x) = [(y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)]
 score grid = reachable 0 . Set.singleton
   where
     reachable 9 pos = length pos
-    reachable n pos = reachable (n + 1) next
-      where
-        next =
-          Set.toList pos
-            >>= neighbours
-            & Set.fromList
-            & Set.filter (inRange $ bounds grid)
-            & Set.filter ((==) (n + 1) . (!) grid)
+    reachable n pos =
+      Set.toList pos
+        >>= neighbours
+        & Set.fromList
+        & Set.filter (inRange $ bounds grid)
+        & Set.filter ((==) (n + 1) . (!) grid)
+        & reachable (n + 1)
 
 answer contents = sum $ score input <$> filter ((==) 0 . (!) input) (indices input)
   where
