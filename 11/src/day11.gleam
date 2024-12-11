@@ -10,7 +10,7 @@ import gleam/pair
 import gleam/result
 import gleam/string
 
-fn count_digits(n: Int) {
+fn count_digits(n) {
   case n {
     n if n < 10 -> 1
     n -> 1 + count_digits(n / 10)
@@ -20,7 +20,6 @@ fn count_digits(n: Int) {
 fn pow(n, i) {
   case i {
     0 -> 1
-    1 -> n
     i -> n * pow(n, i - 1)
   }
 }
@@ -69,7 +68,7 @@ pub fn main() {
   |> result.unwrap("")
   |> string.trim()
   |> string.split(" ")
-  |> list.try_map(int.parse(_))
+  |> list.try_map(int.parse)
   |> result.unwrap([])
   |> list.map(pair.new(_, 1))
   |> count()
