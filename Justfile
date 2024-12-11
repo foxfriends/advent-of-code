@@ -2,6 +2,9 @@ set dotenv-load
 set quiet
 set shell := ["fish", "-c"]
 
+year := env_var("YEAR")
+session := env_var("SESSION")
+
 [no-cd]
 default: p1 p2
 
@@ -35,7 +38,7 @@ run day:
 
 get day:
     mkdir -p {{day}}
-    curl https://adventofcode.com/2024/day/{{day}}/input \
+    curl https://adventofcode.com/{{year}}/day/{{day}}/input \
         -X GET \
-        -H "Cookie: session=$session" \
+        -H "Cookie: session={{session}}" \
         -o {{day}}/input
