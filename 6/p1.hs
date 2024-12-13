@@ -13,10 +13,7 @@ readGrid contents = listArray ((0, 0), (height - 1, width - 1)) $ concat input
 
 up = (-1, 0)
 
-turn (-1, 0) = (0, 1)
-turn (0, 1) = (1, 0)
-turn (1, 0) = (0, -1)
-turn (0, -1) = (-1, 0)
+turn (y, x) = (x, -y)
 
 move (y, x) (dy, dx) = (y + dy, x + dx)
 

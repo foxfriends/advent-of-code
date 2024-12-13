@@ -20,7 +20,9 @@ visit pos = modify' (Set.insert pos)
 
 been pos = gets (Set.member pos)
 
-neighbours (y, x) = [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)]
+neighbours pos = add2 pos <$> [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+add2 (x, y) (x2, y2) = (x + x2, y + y2)
 
 flood :: Grid -> Pos -> State (Set Pos) (Maybe (Int, Int))
 flood grid pos = do
@@ -40,7 +42,7 @@ flood grid pos = do
             else do
               visit pos
               floods <- mapM (flood_ ch) (neighbours pos)
-              return $ foldl (\(a1, p1) (a2, p2) -> (a1 + a2, p1 + p2)) (1, 0) floods
+              return $ foldl add2 (1, 0) floods
 
 answer :: String -> Int
 answer contents = sum $ fmap (uncurry (*)) $ catMaybes $ evalState (mapM (flood grid) (indices grid)) Set.empty
