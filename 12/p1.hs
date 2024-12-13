@@ -1,13 +1,12 @@
 import Control.Monad
 import Control.Monad.State
 import Data.Array.Unboxed
-import Data.Set qualified as Set
-import Data.Set (Set)
 import Data.Maybe
-
-mapsnd f (x, y) = (x, f y)
+import Data.Set (Set)
+import Data.Set qualified as Set
 
 type Pos = (Int, Int)
+
 type Grid = Array Pos Char
 
 readGrid :: String -> Grid
@@ -17,37 +16,34 @@ readGrid contents = listArray ((0, 0), (height - 1, width - 1)) $ concat input
     height = length input
     width = length (input !! 0)
 
-visit pos = modify' (mapsnd $ Set.insert pos)
+visit pos = modify' (Set.insert pos)
 
-been pos = gets (Set.member pos . snd)
-
-at (y, x) = gets ((!? (y, x)) . fst)
+been pos = gets (Set.member pos)
 
 neighbours (y, x) = [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)]
 
-flood :: Pos -> State (Grid, Set Pos) (Maybe (Int, Int))
-flood pos = do
+flood :: Grid -> Pos -> State (Set Pos) (Maybe (Int, Int))
+flood grid pos = do
   hasbeen <- been pos
   if hasbeen
     then return Nothing
-    else do
-      ch <- at pos
-      case ch of
-        Nothing -> return Nothing
-        Just ch -> Just <$> flood_ ch pos
+    else Just <$> flood_ (grid ! pos) pos
   where
-    flood_ :: Char -> Pos -> State (Grid, Set Pos) (Int, Int)
+    flood_ :: Char -> Pos -> State (Set Pos) (Int, Int)
     flood_ ch pos = do
-      here <- at pos
       hasbeen <- been pos
-      if here /= Just ch || hasbeen then return (0, 0) else do
-        visit pos
-        p <- length . filter (/= Just ch) <$> mapM at (neighbours pos)
-        floods <- mapM (flood_ ch) (neighbours pos)
-        return $ foldl (\(a1, p1) (a2, p2) -> (a1 + a2, p1 + p2)) (1, p) floods
+      if grid !? pos /= Just ch
+        then return (0, 1)
+        else
+          if hasbeen
+            then return (0, 0)
+            else do
+              visit pos
+              floods <- mapM (flood_ ch) (neighbours pos)
+              return $ foldl (\(a1, p1) (a2, p2) -> (a1 + a2, p1 + p2)) (1, 0) floods
 
 answer :: String -> Int
-answer contents = sum $ fmap (uncurry (*)) $ catMaybes $ evalState (mapM flood (indices grid)) (grid, Set.empty)
+answer contents = sum $ fmap (uncurry (*)) $ catMaybes $ evalState (mapM (flood grid) (indices grid)) Set.empty
   where
     grid = readGrid contents
 
