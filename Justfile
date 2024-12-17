@@ -29,6 +29,9 @@ do part input:
     if test -f {{part}}.hs
         ghc {{part}} -outputdir.{{part}} > /dev/null
         and time ./{{part}} < {{input}}
+    else if test -f *.cabal
+        cabal build {{part}} > /dev/null
+        and time cabal run {{part}} < {{input}}
     else if test -f {{part}}.fish
         time ./{{part}}.fish < {{input}}
     end
