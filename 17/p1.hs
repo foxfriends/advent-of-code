@@ -37,14 +37,14 @@ apply 0 c = do
 apply 1 l = modify (\r -> r {rb = rb r `xor` l})
 apply 2 c = do
   val <- combo c
-  modify (\r -> r {rb = val .&. 7})
+  modify (\r -> r {rb = val .&. 0b111})
 apply 3 l = do
   val <- gets ra
   unless (val == 0) (modify (\r -> r {ip = l}))
 apply 4 _ = modify (\r -> r {rb = rb r `xor` rc r})
 apply 5 c = do
   val <- combo c
-  lift $ tell [val .&. 7]
+  lift $ tell [val .&. 0b111]
 apply 6 c = do
   val <- combo c
   modify (\r -> r {rb = ra r `shiftR` val})
