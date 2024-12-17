@@ -1,6 +1,5 @@
 import Control.Monad.State
 import Data.Array.Unboxed
-import Data.Bifunctor
 import Data.Function
 import Data.Heap (Entry (Entry), Heap)
 import Data.Heap qualified as Heap
@@ -10,7 +9,6 @@ import Data.Map.Strict qualified as Map
 import Data.Maybe
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Debug.Trace
 
 type Grid = Array Pos Char
 
