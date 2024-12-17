@@ -63,20 +63,19 @@ run program = do
 
 eval ra rb rc ops = (execWriter $ evalStateT (run ops) (Registers ra rb rc 0))
 
-answer :: String -> Int
 answer contents = findAnswer 0 0
   where
     Right (_, rb, rc, ops) = parse parseInput "" contents
-    goal = length ops
+    goal = length ops - 1
     program = listArray (0, length ops - 1) ops
     tryra ra = eval ra rb rc program
-    findAnswer n i | n == goal = i
+    findAnswer n i | n == goal = i `shiftR` 3 -- a little overshot here oh well
     findAnswer n i =
       let out = tryra i
           dig = out !! 0
           exp = ops !! (goal - n - 1)
        in if dig == exp
-            then findAnswer (n + 1) (i + (1 `shiftL` (3 * (n + 1))))
-            else findAnswer n (i + (1 `shiftL` (3 * n)))
+            then findAnswer (n + 1) (i `shiftL` 3)
+            else findAnswer n (i + 1)
 
 main = getContents >>= print . answer
