@@ -65,7 +65,6 @@ eval ra rb rc ops = (execWriter $ evalStateT (run ops) (Registers ra rb rc 0))
 answer contents = findAnswer 1
   where
     Right (_, rb, rc, ops) = parse parseInput "" contents
-    goal = length ops - 1
     program = listArray (0, length ops - 1) ops
     tryra ra = eval ra rb rc program
     findAnswer i =
