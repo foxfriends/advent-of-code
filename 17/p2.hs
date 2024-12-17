@@ -4,7 +4,6 @@ import Control.Monad.Writer
 import Data.Array.Unboxed
 import Data.Bits
 import Data.List
-import Numeric
 import Text.Parsec
 
 int :: Parsec String s Int
@@ -63,19 +62,18 @@ run program = do
 
 eval ra rb rc ops = (execWriter $ evalStateT (run ops) (Registers ra rb rc 0))
 
-answer contents = findAnswer 0 0
+answer contents = findAnswer 1
   where
     Right (_, rb, rc, ops) = parse parseInput "" contents
     goal = length ops - 1
     program = listArray (0, length ops - 1) ops
     tryra ra = eval ra rb rc program
-    findAnswer n i | n == goal = i `shiftR` 3 -- a little overshot here oh well
-    findAnswer n i =
+    findAnswer i =
       let out = tryra i
-          dig = out !! 0
-          exp = ops !! (goal - n - 1)
-       in if dig == exp
-            then findAnswer (n + 1) (i `shiftL` 3)
-            else findAnswer n (i + 1)
+          dist = length ops - length out
+          exp = drop dist ops
+       in if out == exp
+            then (if dist == 0 then i else findAnswer (i `shiftL` 3))
+            else findAnswer (i + 1)
 
 main = getContents >>= print . answer
