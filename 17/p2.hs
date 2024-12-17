@@ -60,7 +60,7 @@ run program = do
     apply (program ! ip) (program ! (ip + 1))
     run program
 
-eval ra rb rc ops = (execWriter $ evalStateT (run ops) (Registers ra rb rc 0))
+eval ra rb rc ops = execWriter $ evalStateT (run ops) (Registers ra rb rc 0)
 
 answer contents = findAnswer 1
   where
