@@ -2,7 +2,6 @@ import Control.Monad.State
 import Data.Array.Unboxed
 import Data.Heap (Entry (Entry), Heap)
 import Data.Heap qualified as Heap
-import Data.List
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Text.Parsec
@@ -68,9 +67,21 @@ pair = do
 check :: Grid -> Maybe Int
 check grid = evalStateT (shortestPath grid size) (Heap.fromList [Entry 0 (0, 0)], Map.insert (0, 0) 0 $ Map.fromList $ (,maxBound) <$> indices grid)
 
-answer contents = last ans
+bfind :: (Int -> Ordering) -> (Int, Int) -> Int
+bfind cmp (min, max) = bsearch (min, max) ((min + max) `div` 2)
   where
-    Just ans = find ((== Nothing) . check . readGrid) $ flip take input <$> [1024 ..]
+    bsearch (min, max) i =
+      case cmp i of
+        EQ -> i
+        LT -> bsearch (i, max) (i + (max - i) `div` 2)
+        GT -> bsearch (min, i) (i - (i - min) `div` 2)
+
+answer contents = input !! (bfind boundary (1024, length input) - 1)
+  where
+    boundary i = case (check $ readGrid $ take (i - 1) input, check $ readGrid $ take i input) of
+      (Just _, Nothing) -> EQ
+      (Nothing, Nothing) -> GT
+      (Just _, Just _) -> LT
     Right input = parse (pair `endBy` newline) "" contents
 
 main = getContents >>= print . answer
