@@ -3,7 +3,7 @@ import Data.Map (Map, (!?))
 import Data.Map qualified as Map
 import Text.Parsec
 
-parseTowels = many letter `sepBy` (string ", ")
+parseTowels = many letter `sepBy` string ", "
 
 memoize p = do
   input <- getInput
@@ -18,10 +18,10 @@ memoize p = do
 allOf ps = do
   input <- getInput
   pos <- getPosition
-  sequence $ fmap (\p -> setInput input >> setPosition pos >> p) ps
+  mapM (\p -> setInput input >> setPosition pos >> p) ps
 
 parseTarget :: [String] -> Parsec String (Map String Int) Int
-parseTarget towels = memoize (sum <$> (allOf $ fmap (\s -> try (string s >> ((eof >> return 1) <|> parseTarget towels)) <|> return 0) towels))
+parseTarget towels = memoize (sum <$> allOf (fmap (\s -> try (string s >> ((eof >> return 1) <|> parseTarget towels)) <|> return 0) towels))
 
 answer input = sum $ rights $ fmap (runParser (parseTarget towels) Map.empty "") targets
   where
