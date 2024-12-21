@@ -27,7 +27,7 @@ p2 input="input": (do "p2" input)
 do part input:
     #!/usr/bin/env fish
     if test -f {{part}}.hs
-        ghc {{part}} -outputdir.{{part}} > /dev/null
+        ghc {{part}} -O -outputdir.{{part}} > /dev/null
         and time ./{{part}} < {{input}}
     else if ls | rg "\.cabal\$" -q
         cabal build {{part}} > /dev/null
