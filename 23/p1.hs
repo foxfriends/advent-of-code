@@ -16,7 +16,7 @@ isT v = v `div` 26 == ord 't' - ord 'a'
 
 groups graph from = search 3 graph from
   where
-    search 0 graph end = if end == from then [[end]] else []
+    search 0 graph end = if end == from then [[]] else []
     search n graph node = do
       next <- graph ! node
       tail <- search (n - 1) graph next
