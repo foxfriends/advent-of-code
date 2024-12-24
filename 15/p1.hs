@@ -13,7 +13,7 @@ robot = do
   putState $ Just (sourceLine pos - 1, sourceColumn pos - 1)
   char '@'
 
-tile = char '#' <|> char 'O' <|> char '.' <|> robot
+tile = oneOf "#O." <|> robot
 
 up = char '^' >> return (-1, 0)
 
