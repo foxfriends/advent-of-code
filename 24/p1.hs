@@ -41,7 +41,7 @@ toInt [] = 0
 toInt (True : bits) = (toInt bits `shiftL` 1) .|. 1
 toInt (False : bits) = toInt bits `shiftL` 1
 
-answer contents = toInt $ fmap get $ filter ((== 'z') . head) $ Map.keys circuit
+answer contents = toInt [get n | n <- Map.keys circuit, head n == 'z']
   where
     Right circuit = parse wires "" contents
     get = eval circuit
