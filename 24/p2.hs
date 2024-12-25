@@ -1,5 +1,3 @@
-import Data.Bits
-import Data.List
 import Data.Map.Strict (Map, (!))
 import Data.Map.Strict qualified as Map
 import Text.Parsec
@@ -29,25 +27,6 @@ wires =
     newline
     circuits <- binaryWire `endBy` newline
     return (constants ++ circuits)
-
-eval circuit = memoized
-  where
-    memoized i = eval_ (circuit ! i)
-    eval_ (C b) = b
-    eval_ (A lhs rhs) = memoized lhs && memoized rhs
-    eval_ (O lhs rhs) = memoized lhs || memoized rhs
-    eval_ (X lhs rhs) = memoized lhs /= memoized rhs
-
-toInt :: [Bool] -> Int
-toInt [] = 0
-toInt (True : bits) = (toInt bits `shiftL` 1) .|. 1
-toInt (False : bits) = toInt bits `shiftL` 1
-
-toBits :: Int -> Int -> [Bool]
-toBits 0 n = []
-toBits i n = (n .&. 1 == 1) : toBits (i - 1) (n `shiftR` 1)
-
-replace ch n = Map.union (Map.fromList $ (\(i, b) -> (ch : printf "%02d" i, C b)) <$> [0 :: Int ..] `zip` toBits 45 n)
 
 mkx :: Int -> Tree
 mkx n = CON $ printf "x%02d" n
