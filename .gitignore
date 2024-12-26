@@ -1,5 +1,13 @@
-main
+input
+sample
+.env
+err
+out
+build
 *.hi
 *.o
-.stack-work/
-*/input
+p1
+.p1
+p2
+.p2
+dist-newstyle
