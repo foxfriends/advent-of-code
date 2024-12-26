@@ -1,0 +1,62 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use chomp, split
+module num at "trilogy:num" use cast
+module array at "trilogy:array" use map, length
+module iter at "trilogy:iter" use rangex
+
+func parse input = input
+    |> split " @ "
+    |> map (split ", " >> map cast)
+
+func is_int x = x == (x // 1)
+
+proc main!() {
+    let hailstones = [parse <| chomp line for line in readlines!()]
+
+    let mut total = 0
+    let mut xvels = [|x for x in rangex (-500) 500 and is x != 0|]
+    let mut yvels = [|x for x in rangex (-500) 500 and is x != 0|]
+    let mut zvels = [|x for x in rangex (-500) 500 and is x != 0|]
+
+    for i in rangex 0 (length hailstones - 1) and j in rangex (i + 1) (length hailstones) {
+        let [[apx, apy, apz], [avx, avy, avz]] = hailstones.i
+        let [[bpx, bpy, bpz], [bvx, bvy, bvz]] = hailstones.j
+        if avx == bvx {
+            xvels = [|
+                x
+                for x in xvels
+                and is avx != x
+                and is is_int ((apx - bpx) / (avx - x))
+            |]
+        }
+        if avy == bvy {
+            yvels = [|
+                y
+                for y in yvels
+                and is avy != y
+                and is is_int ((apy - bpy) / (avy - y))
+            |]
+        }
+        if avz == bvz {
+            zvels = [|
+                z
+                for z in zvels
+                and is avz != z
+                and is is_int ((apz - bpz) / (avz - z))
+            |]
+        }
+    }
+
+    for vx in xvels and vy in yvels and vz in zvels {
+        let [[apx, apy, apz], [avx, avy, avz]] = hailstones.0
+        let [[bpx, bpy, bpz], [bvx, bvy, bvz]] = hailstones.1
+        let t2 = (bpx * (avy - vy) - apx * (avy - vy) - bpy * (avx - vx) + apy * (avx - vx)) / ((bvy - vy) * (avx - vx) - (avy - vy) * (bvx - vx))
+        let t1 = (bpx - apx + t2 * (bvx - vx)) / (avx - vx)
+
+        let x0 = apx + t1 * avx - t1 * vx
+        let y0 = apy + t1 * avy - t1 * vy
+        let z0 = apz + t1 * avz - t1 * vz
+
+        println!(x0 + y0 + z0)
+    }
+}
