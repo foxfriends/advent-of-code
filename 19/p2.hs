@@ -29,7 +29,12 @@ parseParser = do
   return (id, alternatives)
 
 buildParser :: IntMap [Rule] -> Parsec String u ()
-buildParser map = rules ! 0 >> eof
+buildParser map = do
+  l <- length <$> many1 (rules ! 42)
+  r <- length <$> many1 (rules ! 31)
+  eof
+  guard $ l > r
+  return ()
   where
     rules = fmap ruleParser map
     ruleParser [single] = altParser single
