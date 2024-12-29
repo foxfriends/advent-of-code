@@ -1,0 +1,63 @@
+module io at "trilogy:io" use readlines, println
+module num at "trilogy:num" use re, im, cast, min
+module str at "trilogy:str" use chomp, chars, fmt
+module array at "trilogy:array" use merge, length
+module tuple at "trilogy:tuple" use fst, snd
+module btreemod at "trilogy:btree" use btree
+
+const N = -0i1
+const S = 0i1
+const E = 1i0
+const W = -1i0
+
+func turn dir = [-0i1 * dir, -(-0i1 * dir)]
+func key ^N = 'v
+func key ^S = 'v
+func key ^E = 'h
+func key ^W = 'h
+
+func asc key lhs rhs = key lhs <= key rhs
+
+func insert _ val unit = val:unit
+func insert _ val val:xs = val:xs
+func insert cmp val x:xs = if cmp val x then val:x:xs else x:insert cmp val xs
+
+proc main!() {
+    let grid = [[cast $"${n}"fmt for n in chars <| chomp line] for line in readlines!()]
+    let best = {| 0i0 => {| 'h => 0, 'v => 0 |} |}
+
+    let goal = (length grid * S + length (grid.0) * E) + N + W
+
+    let score = fn pos:dir. best.pos.(key dir)
+    let enqueue = fn pos dir. insert (asc score) (pos:dir)
+
+    let ltree = btree (asc score)
+
+    let mut queue = ltree::from [0i0:E, 0i0:S]
+    while queue != 'empty {
+        let (pos:face):q2 = ltree::pop_min queue
+        queue = q2
+        let fhv = key face
+        if pos == goal {
+            println!(best.pos.fhv)
+            exit 0
+        }
+        for dir in turn face {
+            let dhv = key dir
+            let mut offset = 0
+            for i in [1, 2, 3] {
+                let newpos = pos + i * dir
+                offset += with grid.(im newpos).(re newpos) else invert { break }
+                let newscore = best.pos.fhv + offset
+                best.newpos = with best.newpos else cancel {| |}
+                let oldscore = with best.newpos.dhv else cancel newscore + 1
+                if newscore < oldscore {
+                    best.newpos.dhv = newscore
+                    queue = ltree::insert (newpos:dir) queue
+                }
+            }
+        }
+    }
+
+    exit 1
+}

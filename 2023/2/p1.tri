@@ -1,0 +1,29 @@
+module io at "trilogy:io" use readlines, println
+module num at "trilogy:num" use cast
+module str at "trilogy:str" use split
+module array at "trilogy:array" use map, all
+module regex at "trilogy:regex"
+
+func valid {| 1 => n, 2 => "red", .._ |}   = cast n <= 12
+func valid {| 1 => n, 2 => "green", .._ |} = cast n <= 13
+func valid {| 1 => n, 2 => "blue", .._ |}  = cast n <= 14
+
+proc main!() {
+    let game_pattern = regex::new "Game (\\d+): (.*)"
+    let draw_pattern = regex::new "(\\d+) (green|red|blue)"
+    let mut total = 0
+    for line in readlines!() {
+        let game = game_pattern::matches line
+        let game_valid = game.2
+            |> split "; "
+            |> all (
+                split ", "
+                >> map (draw_pattern::matches)
+                >> all valid
+            )
+        if game_valid {
+            total += cast game.1
+        }
+    }
+    println!(total)
+}

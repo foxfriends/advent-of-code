@@ -1,0 +1,65 @@
+module io at "trilogy:io" use println, readlines
+module array at "trilogy:array" use map, filter, fold
+module num at "trilogy:num" use cast
+module str at "trilogy:str" use chomp, split
+module range at "trilogy:range" use overlap, length, new
+module regex at "trilogy:regex"
+
+const workflow_regex = regex::new "(?<name>\\w+)\\{(?<steps>.*)\\}"
+const step_regex = regex::new "(?<comp>[xmas])(?<op>[<>])(?<val>\\d+)"
+
+func comp_total comp = length comp
+func part_total {| "x" => x, "m" => m, "a" => a, "s" => s |} = comp_total x * comp_total m * comp_total a * comp_total s
+
+func parse_cond str =
+    let {| "comp" => comp, "op" => op, "val" => val, .._ |} = step_regex::matches str,
+    comp:op:(cast val)
+
+func parse_step [x] = x
+func parse_step [cond, step] = parse_cond cond : step
+
+func parse_part "{" <> str <> "}" = {| key => cast value for [key, value] in str |> split "," |> map (split "=") |}
+
+func parse_workflow str =
+    let {| "name" => name, "steps" => steps, .._ |} = workflow_regex::matches str,
+    name : (steps |> split "," |> map (split ":") |> map parse_step)
+
+func keep (key : "<" : val) {| ^key => range, ..part |} = {| ..part, key => overlap (new 1 val) range |}
+func keep (key : ">" : val) {| ^key => range, ..part |} = {| ..part, key => overlap (new (val + 1) 4001) range |}
+
+func remove (key : "<" : val) part = keep (key : ">" : val - 1) part
+func remove (key : ">" : val) part = keep (key : "<" : val + 1) part
+
+rule apply_one(part, [wf and typeof 'string], accepted) <-
+    if is wf == "A" then accepted = part
+    else if is wf == "R" then end
+    else if is wf != "R" then apply(part, wf, accepted)
+
+rule apply_one(part, [cond:_, ..wfs], accepted) <-
+    rejected = with remove cond part when 'disjoint cancel unit else yield
+    and typeof 'record = rejected
+    and apply_one(rejected, wfs, accepted)
+rule apply_one(part, [cond:dest, .._], accepted) <-
+    kept = with keep cond part when 'disjoint cancel unit else yield
+    and typeof 'record = kept
+    and apply(kept, dest, accepted)
+
+rule apply(part, wf, accepted) <-
+    workflow = yield 'get(wf)
+    and apply_one(part, workflow, accepted)
+
+proc main!() {
+    let [workflowstr, _] = array::split ((==) "") [chomp line for line in readlines!()]
+    let workflows = {| name => value for workflow in workflowstr and name:value = parse_workflow workflow |}
+
+    let omnipart = {| "x" => new 1 4001, "m" => new 1 4001, "a" => new 1 4001, "s" => new 1 4001 |}
+
+    with {
+        let accepted = [acc for apply(^omnipart, "in", acc)]
+        println!(accepted |> map part_total |> fold (+) 0)
+    }
+    when 'get("A") resume ["A"]
+    when 'get("R") resume ["R"]
+    when 'get(wf) resume workflows.wf
+    else yield
+}

@@ -1,0 +1,42 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use fold, all, length, map, zip, filter
+module num at "trilogy:num" use abs
+module iter at "trilogy:iter" use rangex
+
+func scan f i [] = []
+func scan f i [x, ..xs] = let a = f i x, [a, ..scan f a xs]
+
+func height row = if all ((==) '.') row then 1000000 else 1
+
+proc main!() {
+    let universe = [chars <| chomp line for line in readlines!()]
+    let transposed = [[universe.y.x for y in rangex 0 (length universe)] for x in rangex 0 (length <| universe.0)]
+
+    let ys = universe
+        |> map height
+        |> scan (+) 0
+    let xs = transposed
+        |> map height
+        |> scan (+) 0
+
+    let x_stars = [length [1 for '#' in col] for col in transposed]
+    let y_stars = [length [1 for '#' in row] for row in universe]
+    let total = fold (+) 0 x_stars
+    let at_x = x_stars |> scan (+) 0 |> zip xs |> filter (fn _:n. n != 0)
+    let at_y = y_stars |> scan (+) 0 |> zip ys |> filter (fn _:n. n != 0)
+
+    let xdist = [
+        (x2 - x) * n * (total - n)
+        for i in rangex 0 (length at_x - 1)
+        and x:n = at_x.i
+        and x2:_ = at_x.(i + 1)
+    ]
+    let ydist = [
+        (y2 - y) * n * (total - n)
+        for i in rangex 0 (length at_y - 1)
+        and y:n = at_y.i
+        and y2:_ = at_y.(i + 1)
+    ]
+    println!(fold (+) 0 [..xdist, ..ydist])
+}

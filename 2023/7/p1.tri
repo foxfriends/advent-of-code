@@ -1,0 +1,49 @@
+module io at "trilogy:io" use println, readlines
+module iter at "trilogy:iter"
+module array at "trilogy:array" use length, map, sort
+module str at "trilogy:str" use take, skip, chars
+module num at "trilogy:num" use cast
+module tuple at "trilogy:tuple" use fst, mapfst
+
+func occurrences arr v = length [1 for ^v in arr]
+
+func rank [a, a, a, a, a] = 1
+func rank [a, a, a, a, b] = 2
+func rank [a, a, a, b, b] = 3
+func rank [a, a, a, b, c] = 4
+func rank [a, a, b, b, c] = 5
+func rank [a, a, b, c, d] = 6
+func rank _ = 7
+
+func asc prop a b = prop a <= prop b
+func desc prop a b = prop a >= prop b
+
+func parse line <> "\n" = (take 5 line |> chars) : (skip 6 line |> cast)
+
+func card_score 'A' = 14
+func card_score 'K' = 13
+func card_score 'Q' = 12
+func card_score 'J' = 11
+func card_score 'T' = 10
+func card_score '9' = 9
+func card_score '8' = 8
+func card_score '7' = 7
+func card_score '6' = 6
+func card_score '5' = 5
+func card_score '4' = 4
+func card_score '3' = 3
+func card_score '2' = 2
+
+proc main!() {
+    let total = readlines
+        |> iter::map parse
+        |> iter::collect array
+        |> sort (asc (fst >> map card_score))
+        |> map (mapfst ((fn hand. sort (>=) hand |> sort (desc (occurrences hand))) >> rank))
+        |> sort (desc fst)
+        |> iter::of
+        |> iter::enumerate
+        |> iter::map (fn i:_:score. (i + 1) * score)
+        |> iter::reduce (+)
+    println!(total)
+}

@@ -1,0 +1,64 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp
+module num at "trilogy:num" use abs, max, cast
+module tuple at "trilogy:tuple" use fst, snd
+module array at "trilogy:array" use sort, fold, all
+module set at "trilogy:set" use length, insert
+module regex at "trilogy:regex"
+module iter at "trilogy:iter" use range
+
+const line_regex = regex::new "(\\d+),(\\d+),(\\d+)~(\\d+),(\\d+),(\\d+)"
+func parse str =
+    let matches = line_regex::matches str,
+    normalize (cast (matches.1):cast (matches.2):cast (matches.3)) (cast (matches.4):cast (matches.5):cast (matches.6))
+
+func normalize a b = if z a <= z b then a:b else b:a
+
+func x x:_:_ = x
+func y _:y:_ = y
+func z _:_:z = z
+func dim f a:b = abs (f a - f b)
+
+func asc f a b = f a <= f b
+
+func uprange a b = if a <= b then range a b else range b a
+
+func mapz f x:y:z = x:y:f z
+func sub x a = a - x
+
+func fall dist (a:b) = mapz (sub dist) a:mapz (sub dist) b
+
+proc main!() {
+    let blocks = sort (asc (z << fst)) [parse (chomp line) for line in readlines!()]
+
+    let fallen = {||}
+    let supported_by = {||}
+    let supporting = {||}
+    for block in blocks {
+        let a:b = block
+        let plane = [i:j for i in uprange (x a) (x b) and j in uprange (y a) (y b)]
+        let zs = [with fst (fallen.coord) else cancel 0 for coord in plane]
+        let tz = fold max 0 zs
+        let fall_on = [| on for coord in plane and ^tz:on = with fallen.coord else cancel unit |]
+        let dist = (z a) - (tz + 1)
+        let fell_to = fall dist block
+        let zz = z (snd fell_to)
+
+        supporting.block = [||]
+        for support in fall_on {
+            supporting.support = insert block (supporting.support)
+        }
+        supported_by.block = fall_on
+        for coord in plane {
+            fallen.coord = zz:block
+        }
+    }
+
+    let mut dissolvable = 0
+    for supporter:supported in supporting {
+        if all (fn x. length (supported_by.x) >= 2) [x for x in supported] {
+            dissolvable += 1
+        }
+    }
+    println!(dissolvable)
+}

@@ -1,0 +1,144 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use chomp, split
+module array at "trilogy:array" use is_empty, push
+module iter at "trilogy:iter" use range
+module tuple at "trilogy:tuple" use mapsnd
+
+module broadcaster destinations {
+    proc add_input!(_) {}
+
+    proc init!() {
+        for dest in destinations {
+            yield 'init(dest)
+        }
+    }
+
+    proc signal!(_) {
+        for dest in destinations {
+            yield 'low(dest)
+        }
+    }
+
+    export add_input, init, signal
+}
+
+module flipflop destinations {
+    const state = {| 'on => false |}
+
+    proc add_input!(_) {}
+
+    proc init!() {
+        for dest in destinations {
+            yield 'init(dest)
+        }
+    }
+
+    proc signal!(signal) {
+        match signal
+            case 'low(_) {
+                if state.'on {
+                    state.'on = false
+                    for dest in destinations {
+                        yield 'low(dest)
+                    }
+                } else {
+                    state.'on = true
+                    for dest in destinations {
+                        yield 'high(dest)
+                    }
+                }
+            }
+            case 'high {}
+    }
+
+    export add_input, init, signal
+}
+
+module conjunction destinations {
+    const state = {||}
+
+    proc add_input!(input) {
+        state.input = 'low
+    }
+
+    proc init!() {
+        for dest in destinations {
+            yield 'init(dest)
+        }
+    }
+
+    proc signal!(signal) {
+        match signal
+            case 'low(input) {
+                state.input = 'low
+            }
+            case 'high(input) {
+                state.input = 'high
+            }
+        for _:value in state {
+            if value == 'low {
+                for dest in destinations {
+                    yield 'high(dest)
+                }
+                return
+            }
+        }
+        for dest in destinations {
+            yield 'low(dest)
+        }
+    }
+
+    export add_input, init, signal
+}
+
+func parse_node srcdest = let [name, dests] = split " -> " srcdest, name : split ", " dests
+
+func parse "%" <> srcdest = parse_node srcdest |> (fn n:x.n:flipflop x)
+func parse "&" <> srcdest = parse_node srcdest |> (fn n:x.n:conjunction x)
+func parse "broadcaster -> " <> dests = "broadcaster" : broadcaster (split ", " dests)
+
+proc main!() {
+    let nodes = {| |}
+    for line in readlines!() {
+        let name:node = parse <| chomp line
+        nodes.name = node
+    }
+
+    for name:node in nodes {
+        with { node::init!() }
+            when 'init(dest) resume (with (nodes.dest)::add_input!(name) else cancel unit)
+            else yield
+    }
+
+    let mut lows = 0
+    let mut highs = 0
+
+    for i in range 1 1000 {
+        let mut queue = ["button":'low("broadcaster")]
+        while !(is_empty queue) {
+            let [src:msg, ..rest] = queue
+            let 'low(sender) or 'high(sender) = msg
+            queue = rest
+            with {
+                match msg
+                    case 'low(dest) {
+                        lows += 1
+                        (nodes.dest)::signal!('low(src))
+                    }
+                    case 'high(dest) {
+                        highs += 1
+                        (nodes.dest)::signal!('high(src))
+                    }
+            } when 'low(dest) invert {
+                push!(queue, sender:'low(dest))
+                cancel resume unit
+            } when 'high(dest) invert {
+                push!(queue, sender:'high(dest))
+                cancel resume unit
+            } when 'MIA cancel unit
+            else yield
+        }
+    }
+
+    println!(lows * highs)
+}

@@ -1,0 +1,53 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, split
+module array at "trilogy:array" use fold, push, append, is_empty
+module record at "trilogy:record"
+module set at "trilogy:set" use insert, contains
+
+func over 0 f [x, ..xs] = [f x, ..xs]
+func over i f [x, ..xs] = [x, ..over (i - 1) f xs]
+
+func parse line = line
+    |> split ": "
+    |> over 1 (split " ")
+
+func update k f {| k => a, ..rec |} = {| ..rec, k => f a |}
+func update _ _ rec = rec
+
+func default_to _ k ({| k => _, .. |} and rec) = rec
+func default_to v k rec = record::insert k v rec
+
+func into_graph rec a:b = rec
+    |> default_to [] a
+    |> update a (append b)
+    |> default_to [] b
+    |> update b (append a)
+
+proc main!() {
+    let delete = [
+        "hqq":"xxq",
+        "xxq":"hqq",
+        "vkd":"qfb",
+        "qfb":"vkd",
+        "xzz":"kgl",
+        "kgl":"xzz",
+    ]
+    let edges = [f:t for line in readlines!() and [f, ts] = parse <| chomp line and t in ts and not is array::contains (f:t) delete]
+    let graph = fold into_graph {||} edges
+
+    let mut hqq = [| "hqq" |]
+
+    let mut queue = ["hqq"]
+    while !(is_empty queue) {
+        let [q, ..qq] = queue
+        queue = qq
+        for dest in graph.q {
+            if !(contains dest hqq) {
+                hqq insert= dest
+                push!(queue, dest)
+            }
+        }
+    }
+
+    println!(set::length hqq * (record::length graph - set::length hqq))
+}

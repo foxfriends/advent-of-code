@@ -1,0 +1,25 @@
+module io at "trilogy:io" use readlines, println
+module iter at "trilogy:iter" use map, of, filter, collect, reduce
+module num at "trilogy:num"
+module str at "trilogy:str" use chars
+module array at "trilogy:array"
+
+func is_digit '0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9' = true
+func is_digit _ = false
+
+func combine [a] = $"${str::cast a}${str::cast a}"
+func combine [a, .._, b] = $"${str::cast a}${str::cast b}"
+
+proc main!() {
+    let total = readlines
+        |> map (
+            chars
+            >> of
+            >> filter is_digit
+            >> collect array
+        )
+        |> map combine
+        |> map (num::cast)
+        |> reduce (+)
+    println!(total)
+}

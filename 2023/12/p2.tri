@@ -1,0 +1,72 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use split, chomp, chars, joined, fmt, length
+module iter at "trilogy:iter" use range, rangex, repeat, collect
+module num at "trilogy:num" use cast
+module array at "trilogy:array" use all, fold, find, push, skip
+module tuple at "trilogy:tuple" use to_list, concat
+
+func list_chars ss = ss |> chars |> to_list
+
+func valid unit = true
+func valid '#' : _ = false
+func valid _ : xs = valid xs
+
+rule consume(('?' or '.') : ss, 0, '.' : unit, ss)
+rule consume(('?' or '#') : ss, n, '.' : rep, rs) <-
+    is n != 0
+    and n2 = n - 1
+    and consume(ss, n2, rep, rs)
+
+rule solution(unit, _, unit, 0)
+rule solution('?' : ss, ns, tail, ps) <- solution('.' : ss, ns, tail, ps)
+rule solution('?' : ss, ns, tail, ps) <- solution('#' : ss, ns, tail, ps)
+rule solution('.' : ss, ns, '.' : tail, ps) <- solution(ss, ns, tail, ps)
+rule solution(ss and ('#' : _), [n, ..ns], tail, p2) <-
+    if consume(ss, n, replace_with, rest)
+    then (
+        solution(rest, ns, post_solve, ps)
+        and tail = concat replace_with post_solve
+        and p2 = ps + 1
+    )
+    else (
+        tail = ss
+        and p2 = 0
+    )
+
+rule prefix(n:_, n:unit)
+rule prefix(n:ns, n:suf) <- prefix(ns, suf)
+
+proc main!() {
+    let mut total = 0
+
+    for line in readlines!() {
+        let [puzzle, numbers] = split " " <| chomp line
+        let t = 5
+        let nums = [cast n for n in split "," (repeat t numbers |> collect (joined ","))]
+        let puzzle_chars = (repeat t puzzle |> collect (joined "?")) <> "."
+
+        let mut ways = {| 0 => {| 0 => {| unit => 1 |} |} |}
+        println!(puzzle_chars)
+        for limit in rangex 0 <| length puzzle_chars {
+            let ch = puzzle_chars.limit
+            let mut rest = {| |}
+            for placed:tails in ways.limit and tail:score in tails {
+                let ns = skip placed nums
+                let puzz = concat tail (ch:unit)
+                for solution(^puzz, ^ns, unused, inserted) {
+                    with { rest.(inserted + placed) = rest.(inserted + placed) } when 'MIA resume {||} else yield
+                    with { rest.(inserted + placed).unused += score } when 'MIA resume 0 else yield
+                }
+            }
+            ways.(limit + 1) = rest
+        }
+        for tail:score in ways.(length puzzle_chars).(array::length nums) {
+            if valid tail {
+                total += score
+            }
+        }
+        println!(total)
+    }
+
+    println!(total)
+}

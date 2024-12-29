@@ -1,0 +1,38 @@
+module io at "trilogy:io" use readlines, println
+module record at "trilogy:record" use get
+module array at "trilogy:array" use map, length
+module str at "trilogy:str"
+module iter at "trilogy:iter" use of, enumerate
+module num at "trilogy:num"
+module regex at "trilogy:regex"
+module tuple at "trilogy:tuple" use fst
+
+const gear_regex = regex::new "[*]"
+const number_regex = regex::new "\\d+"
+
+func gears str = gear_regex::all_positions str |> map (get 0 >> fst)
+func numbers str = number_regex::all_captures str |> map (get 0)
+
+proc main!() {
+    let lines = [str::chomp line for line in readlines!()]
+    let gear_positions = map gears lines
+    let number_captures = map numbers lines
+
+    let mut total = 0
+    for i : line in (of gear_positions |> enumerate)!() {
+        with {
+            for col in line {
+                let numbers = [
+                    num::cast <| cap::value!()
+                    for x in [i - 1, i, i + 1]
+                    and cap in number_captures . x
+                    and is cap::start!() - 1 <= col && col <= cap::end_!()
+                ]
+                if length numbers == 2 {
+                    total += numbers.0 * numbers.1
+                }
+            }
+        } when 'MIA resume [] else yield
+    }
+    println!(total)
+}

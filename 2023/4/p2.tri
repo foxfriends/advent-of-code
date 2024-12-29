@@ -1,0 +1,28 @@
+module io at "trilogy:io" use readlines, println
+module regex at "trilogy:regex"
+module str at "trilogy:str" use split, chomp
+module num at "trilogy:num"
+module iter at "trilogy:iter" use map, collect, range, of, enumerate
+module set at "trilogy:set" use intersection, length
+module array at "trilogy:array" use fold
+
+const card_regex = regex::new "Card\\s+\\d+:([^|]+)\\|([^|]+)"
+
+func parse_nums numstr = [| num::cast x for x in numstr |> split " " and is x != "" |]
+func parse_card card = parse_nums card.1 : parse_nums card.2
+
+proc main!() {
+    let scores = readlines
+        |> map (chomp >> card_regex::matches)
+        |> map parse_card
+        |> map (fn a:b. intersection a b |> length)
+        |> collect array
+    let counts = [1 for _ in scores]
+    for i : score in (of scores |> enumerate)!()
+    and n in range (i + 1) (i + score) {
+        with { counts . n += counts . i }
+            when 'MIA cancel unit
+            else yield
+    }
+    println!(counts |> fold (+) 0)
+}

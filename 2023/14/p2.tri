@@ -1,0 +1,131 @@
+module io at "trilogy:io" use println, readlines
+module str at "trilogy:str" use chomp, chars
+module array at "trilogy:array" use transpose, split, length, filter
+module iter at "trilogy:iter" use make_rangex, rangex, range, fold
+
+proc north!(grid) {
+    let w = length grid
+    let h = length (grid.0)
+    for col in rangex 0 w {
+        let mut move_to = 0
+        for row in rangex 0 h {
+            match grid.row.col
+                case '#' { move_to = row + 1 }
+                case 'O' {
+                    if move_to != row {
+                        grid.move_to.col = 'O'
+                        grid.row.col = '.'
+                    }
+                    move_to += 1
+                }
+        }
+    }
+}
+
+proc west!(grid) {
+    let w = length grid
+    let h = length (grid.0)
+    for row in rangex 0 h {
+        let mut move_to = 0
+        for col in rangex 0 w {
+            match grid.row.col
+                case '#' { move_to = col + 1 }
+                case 'O' {
+                    if move_to != col {
+                        grid.row.move_to = 'O'
+                        grid.row.col = '.'
+                    }
+                    move_to += 1
+                }
+        }
+    }
+}
+
+proc south!(grid) {
+    let w = length grid
+    let h = length (grid.0)
+    for col in rangex 0 w {
+        let mut move_to = h - 1
+        for unrow in range 1 h {
+            let row = h - unrow
+            match grid.row.col
+                case '#' { move_to = row - 1 }
+                case 'O' {
+                    if move_to != row {
+                        grid.move_to.col = 'O'
+                        grid.row.col = '.'
+                    }
+                    move_to -= 1
+                }
+        }
+    }
+}
+
+proc east!(grid) {
+    let w = length grid
+    let h = length (grid.0)
+    for row in rangex 0 h {
+        let mut move_to = w - 1
+        for uncol in range 1 w {
+            let col = w - uncol
+            match grid.row.col
+                case '#' { move_to = col - 1 }
+                case 'O' {
+                    if move_to != col {
+                        grid.row.move_to = 'O'
+                        grid.row.col = '.'
+                    }
+                    move_to -= 1
+                }
+        }
+    }
+}
+
+proc spin!(grid) {
+    north!(grid)
+    west!(grid)
+    south!(grid)
+    east!(grid)
+}
+
+func key grid = fold (fn a b. $"${a}${str::cast b}") "" <| do() $(ch for line in grid and (ch in line or ch = '\n'))
+
+const target = 1000000000
+
+proc main!() {
+    let mut total = 0
+    let grid = [chars <| chomp line for line in readlines!()]
+    let mut cycles = 0
+    let mut cache = {||}
+    while cycles < target {
+        let k = key grid
+        with {
+            let last_seen = cache.k
+            let remaining = target - cycles
+            let distance = cycles - last_seen
+            let times = remaining // distance
+            if times > 0 {
+                cycles += times * distance
+            } else {
+                cache.k = cycles
+                spin!(grid)
+                cycles += 1
+            }
+        } when 'MIA invert {
+            cache.k = cycles
+            spin!(grid)
+            cycles += 1
+            cancel unit
+        } else yield
+    }
+    for col in transpose grid {
+        let mut tile_score = length col
+        for char in col {
+            if char == 'O' {
+                total += tile_score
+            }
+            tile_score -= 1
+        }
+    }
+    println!(total)
+}

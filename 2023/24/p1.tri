@@ -1,0 +1,35 @@
+module io at "trilogy:io" use readlines, println
+module str at "trilogy:str" use chomp, split
+module num at "trilogy:num" use cast
+module array at "trilogy:array" use map, length
+module iter at "trilogy:iter" use rangex
+
+func parse input = input
+    |> split " @ "
+    |> map (split ", " >> map cast)
+
+proc main!() {
+    let hailstones = [parse <| chomp line for line in readlines!()]
+
+    let mut total = 0
+    for i in rangex 0 (length hailstones - 1) and j in rangex (i + 1) (length hailstones) {
+        let [[apx, apy, _], [avx, avy, _]] = hailstones.i
+        let [[bpx, bpy, _], [bvx, bvy, _]] = hailstones.j
+
+        let aoy = apy - (avy / avx) * apx
+        let boy = bpy - (bvy / bvx) * bpx
+
+        with {
+            let x = (aoy - boy) / (bvy / bvx - avy / avx)
+            let y = (avy / avx) * x + aoy
+            assert (bvy / bvx) * x + boy == y
+            let ta = (x - apx) / avx
+            let tb = (x - bpx) / bvx
+
+            if ta >= 0 && tb >= 0 && 200000000000000 <= x && x <= 400000000000000 && 200000000000000 <= y && y <= 400000000000000 {
+                total += 1
+            }
+        } when 'INF invert { continue } else yield
+    }
+    println!(total)
+}
