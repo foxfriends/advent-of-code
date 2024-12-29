@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 #[derive(Copy, Clone, Debug)]
 struct Blueprint {
-    id: u32,
+    _id: u32,
     ore: u32,
     clay: u32,
     obsidian: (u32, u32),
@@ -27,7 +27,7 @@ impl FromStr for Blueprint {
         let geode_obsidian = words.nth(2).unwrap();
 
         Ok(Self {
-            id: id.parse()?,
+            _id: id.parse()?,
             ore: ore.parse()?,
             clay: clay.parse()?,
             obsidian: (obsidian_ore.parse()?, obsidian_clay.parse()?),

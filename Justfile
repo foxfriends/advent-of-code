@@ -26,6 +26,21 @@ do part input:
         time python3 "$fn" < {{input}}
     else if test -f {{part}}.rb
         time ruby "$fn" < {{input}}
+    else if test -f {{part}}.ts
+        time deno "$fn" < {{input}}
+    else if test -f {{part}}.php
+        time php "$fn" < {{input}}
+    else if test -f {{part}}.ex
+        time elixir "$fn" < {{input}}
+    else if test -f {{part}}.erl
+        erl -compile "$fn"
+        and time erl -noshell -s {{part}} main -s init stop < {{input}}
+    else if test -f {{part}}.swift
+        swiftc "$fn" > /dev/null
+        and time ./{{part}} < {{input}}
+    else if test -f {{part}}.rs
+        rustc "$fn" > /dev/null
+        and time ./{{part}} < {{input}}
     else if test -f {{part}}.c
         gcc "$fn" -o {{part}} > /dev/null
         and time ./{{part}} < {{input}}
