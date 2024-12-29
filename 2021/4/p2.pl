@@ -135,5 +135,3 @@ main :-
     input(Calls, Boards),
     loser(Calls, Boards-[], Score),
     write(Score), write("\n").
-
-:- main.

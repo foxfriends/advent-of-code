@@ -133,5 +133,3 @@ main :-
     input(Calls, Boards),
     winner(Calls, Boards-[], Score),
     write(Score), write("\n").
-
-:- main.
