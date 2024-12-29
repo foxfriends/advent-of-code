@@ -2,8 +2,6 @@
 
 I return with a new language per day again. Maybe this year I'll remember to keep doing them.
 
-1212704-0a296724
-
 ## Reflection
 
 25 languages is... a lot of languages. Started with ones I was familiar with but

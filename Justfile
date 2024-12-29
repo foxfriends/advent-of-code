@@ -2,20 +2,11 @@ set dotenv-load
 set quiet
 set shell := ["fish", "-c"]
 
-year := env_var("YEAR")
+default_year := "2024"
 session := env_var("SESSION")
 
 [no-cd]
 default: p1 p2
-
-all:
-    #!/usr/bin/env fish
-    for file in (ls)
-        if test -d $file
-            echo "Day $file"
-            just run $file
-        end
-    end
 
 [no-cd]
 p1 input="input": (do "p1" input)
@@ -39,12 +30,9 @@ do part input:
         exit 1
     end
 
-run day:
-    cd {{day}} && just
-
-get day:
-    mkdir -p {{day}}
+get day year=default_year:
+    mkdir -p {{year}}/{{day}}
     curl https://adventofcode.com/{{year}}/day/{{day}}/input \
         -X GET \
         -H "Cookie: session={{session}}" \
-        -o {{day}}/input
+        -o {{year}}/{{day}}/input
