@@ -45,4 +45,4 @@ if (( $current > $top3 )); then
     top3=$temp
 fi
 
-echo $top1 + $top2 + $top3 = $((top1 + top2 + top3))
+echo $((top1 + top2 + top3))

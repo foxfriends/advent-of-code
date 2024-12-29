@@ -38,9 +38,7 @@ sum_score([Game | Games], AllScore) :-
     !.
 
 main :-
-    open("input", read, Fd),
-    read_stream_to_codes(Fd, Contents),
-    close(Fd),
+    read_stream_to_codes(user_input, Contents),
     split_string(Contents, "\n", " ", Lines),
     sum_score(Lines, Score),
     write(Score), write("\n").

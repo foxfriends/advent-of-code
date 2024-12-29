@@ -17,14 +17,17 @@ p2 input="input": (do "p2" input)
 [no-cd]
 do part input:
     #!/usr/bin/env fish
-    if test -f {{part}}.hs
+    set fn (fd -d 1 -t f {{part}})
+    if test -n "$fn" -a -x "$fn"
+        time ./$fn < {{input}}
+    else if test -f {{part}}.pl
+        and time swipl -s "$fn" -g main,halt < {{input}}
+    else if test -f {{part}}.hs
         ghc {{part}} -O -outputdir.{{part}} > /dev/null
         and time ./{{part}} < {{input}}
     else if ls | rg "\.cabal\$" -q
         cabal build {{part}} > /dev/null
         and time cabal run {{part}} < {{input}}
-    else if test -f {{part}}.fish
-        time ./{{part}}.fish < {{input}}
     else
         echo "Current directory does not contain known solution configuration"
         exit 1
