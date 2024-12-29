@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 @lists = (
     ["V", "N", "F", "S", "M", "P", "H", "J"],
     ["Q", "D", "J", "M", "L", "R", "S"],
@@ -10,7 +12,9 @@
     ["F", "B", "P", "G", "V", "J", "S", "D"],
 );
 
+$i = 0;
 while (<>) {
+    if ($i++ < 10) { next; }
     last unless /\S/;
     /move (\d+) from (\d+) to (\d+)/;
     $n = $1;

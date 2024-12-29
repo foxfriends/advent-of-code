@@ -19,9 +19,17 @@ do part input:
     #!/usr/bin/env fish
     set fn (fd -d 1 -t f {{part}})
     if test -n "$fn" -a -x "$fn"
-        time ./$fn < {{input}}
+        time "./$fn" < {{input}}
     else if test -f {{part}}.pl
-        and time swipl -s "$fn" -g main,halt < {{input}}
+        time swipl -s "$fn" -g main,halt < {{input}}
+    else if test -f {{part}}.py
+        time python3 "$fn" < {{input}}
+    else if test -f {{part}}.c
+        gcc "$fn" -o {{part}} > /dev/null
+        and time ./{{part}} < {{input}}
+    else if test -f {{part}}.cpp
+        g++ -std=c++2c "$fn" -o {{part}} > /dev/null
+        and time ./{{part}} < {{input}}
     else if test -f {{part}}.hs
         ghc {{part}} -O -outputdir.{{part}} > /dev/null
         and time ./{{part}} < {{input}}
