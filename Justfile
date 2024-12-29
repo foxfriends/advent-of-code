@@ -27,10 +27,16 @@ p2 input="input": (do "p2" input)
 do part input:
     #!/usr/bin/env fish
     if test -f {{part}}.hs
-        ghc {{part}} -outputdir.{{part}} > /dev/null
+        ghc {{part}} -O -outputdir.{{part}} > /dev/null
         and time ./{{part}} < {{input}}
+    else if ls | rg "\.cabal\$" -q
+        cabal build {{part}} > /dev/null
+        and time cabal run {{part}} < {{input}}
     else if test -f {{part}}.fish
         time ./{{part}}.fish < {{input}}
+    else
+        echo "Current directory does not contain known solution configuration"
+        exit 1
     end
 
 run day:

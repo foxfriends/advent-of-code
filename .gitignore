@@ -3,9 +3,11 @@ sample
 .env
 err
 out
+build
 *.hi
 *.o
 p1
 .p1
 p2
 .p2
+dist-newstyle
