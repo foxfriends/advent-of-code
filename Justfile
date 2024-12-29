@@ -9,14 +9,42 @@ session := env_var("SESSION")
 default: p1 p2
 
 [no-cd]
-p1 input="input": (do "p1" input)
+p1 input="input": (compile "p1") && (run "p1" input)
 
 [no-cd]
-p2 input="input": (do "p2" input)
+p2 input="input": (compile "p2") && (run "p2" input)
 
 [no-cd]
-do part input:
+compile part:
     #!/usr/bin/env fish
+    if test -f {{part}}.erl
+        erl -compile {{part}}.erl
+    else if test -f {{part}}.swift
+        swiftc {{part}}.swift > /dev/null
+    else if test -f {{part}}.rs
+        rustc {{part}}.rs > /dev/null
+    else if test -f {{part}}.c
+        gcc {{part}}.c -o {{part}} > /dev/null
+    else if test -f {{part}}.cpp
+        g++ -std=c++2c {{part}}.cpp -o {{part}} > /dev/null
+    else if test -f {{part}}.hs
+        ghc {{part}} -O -outputdir.{{part}} > /dev/null
+    else if ls | rg "\.cabal\$" -q
+        cabal build {{part}} > /dev/null
+    else if test -f {{part}}.erl
+        erl -compile "$fn"
+    else if test -d {{part}} -a -f {{part}}/gleam.toml
+        pushd {{part}}
+        gleam build
+    end
+
+[no-cd]
+run part input="input":
+    #!/usr/bin/env fish
+    if test -x {{part}}
+        time ./{{part}} < {{input}}
+        exit 0
+    end
     set fn (fd -d 1 -t f {{part}})
     if test -n "$fn" -a -x "$fn"
         time "./$fn" < {{input}}
@@ -36,26 +64,9 @@ do part input:
         pushd {{part}}
         time gleam run "$fn" < ../{{input}}
     else if test -f {{part}}.erl
-        erl -compile "$fn"
-        and time erl -noshell -s {{part}} main -s init stop < {{input}}
-    else if test -f {{part}}.swift
-        swiftc "$fn" > /dev/null
-        and time ./{{part}} < {{input}}
-    else if test -f {{part}}.rs
-        rustc "$fn" > /dev/null
-        and time ./{{part}} < {{input}}
-    else if test -f {{part}}.c
-        gcc "$fn" -o {{part}} > /dev/null
-        and time ./{{part}} < {{input}}
-    else if test -f {{part}}.cpp
-        g++ -std=c++2c "$fn" -o {{part}} > /dev/null
-        and time ./{{part}} < {{input}}
-    else if test -f {{part}}.hs
-        ghc {{part}} -O -outputdir.{{part}} > /dev/null
-        and time ./{{part}} < {{input}}
+        time erl -noshell -s {{part}} main -s init stop < {{input}}
     else if ls | rg "\.cabal\$" -q
-        cabal build {{part}} > /dev/null
-        and time cabal run {{part}} < {{input}}
+        time cabal run {{part}} < {{input}}
     else
         echo "Current directory does not contain known solution configuration"
         exit 1
