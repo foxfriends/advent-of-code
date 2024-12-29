@@ -79,7 +79,7 @@ parseInput input =
     list = concat input
     width = (length list) `div` height
     startIndex = fromJust $ elemIndex 'S' list
-    endIndex = fromJust, nub $ elemIndex 'E' list
+    endIndex = fromJust $ elemIndex 'E' list
 
 main :: IO ()
 main = do

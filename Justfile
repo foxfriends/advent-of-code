@@ -24,6 +24,8 @@ do part input:
         time swipl -s "$fn" -g main,halt < {{input}}
     else if test -f {{part}}.py
         time python3 "$fn" < {{input}}
+    else if test -f {{part}}.rb
+        time ruby "$fn" < {{input}}
     else if test -f {{part}}.c
         gcc "$fn" -o {{part}} > /dev/null
         and time ./{{part}} < {{input}}
