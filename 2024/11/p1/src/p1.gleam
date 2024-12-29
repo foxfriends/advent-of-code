@@ -1,7 +1,6 @@
 import gleam/bool
 import gleam/dict
 import gleam/erlang
-import gleam/function
 import gleam/int
 import gleam/io
 import gleam/list
@@ -73,7 +72,5 @@ pub fn main() {
   |> list.map(pair.new(_, 1))
   |> count()
   |> blink(25)
-  |> function.tap(show)
-  |> blink(50)
   |> show
 }

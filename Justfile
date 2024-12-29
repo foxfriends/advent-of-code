@@ -32,6 +32,9 @@ do part input:
         time php "$fn" < {{input}}
     else if test -f {{part}}.ex
         time elixir "$fn" < {{input}}
+    else if test -d {{part}} -a -f {{part}}/gleam.toml
+        pushd {{part}}
+        time gleam run "$fn" < ../{{input}}
     else if test -f {{part}}.erl
         erl -compile "$fn"
         and time erl -noshell -s {{part}} main -s init stop < {{input}}
