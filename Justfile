@@ -2,7 +2,7 @@ set dotenv-load
 set quiet
 set shell := ["fish", "-c"]
 
-default_year := "2024"
+default_year := env_var_or_default("YEAR", "2024")
 session := env_var("SESSION")
 
 [no-cd]
@@ -73,6 +73,7 @@ run part input="input":
     end
 
 get day year=default_year:
+    echo "Getting {{year}} day {{day}}"
     mkdir -p {{year}}/{{day}}
     curl https://adventofcode.com/{{year}}/day/{{day}}/input \
         -X GET \
