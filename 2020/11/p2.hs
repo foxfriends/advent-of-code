@@ -14,10 +14,6 @@ isOccupied :: Maybe Seat -> Bool
 isOccupied (Just Occupied) = True
 isOccupied _ = False
 
-(!?) :: [a] -> Int -> Maybe a
-(!?) ls i | i >= 0 && i < length ls = Just (ls !! i)
-(!?) _ _ = Nothing
-
 compute :: [[Maybe Seat]] -> Int
 compute seats = if seats == nextSeats
     then length $ filter isOccupied (join seats)
