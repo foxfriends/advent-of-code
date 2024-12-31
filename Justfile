@@ -11,8 +11,8 @@ current_day := replace_regex(relative, "^/\\d+/(\\d+)$|.*", "$1")
 
 default_year := if current_year != "" { current_year } else { env_year }
 
-p1 input="input": (part "p1")
-p2 input="input": (part "p2")
+p1 input="input": (part "p1" current_day current_year input)
+p2 input="input": (part "p2" current_day current_year input)
 compile part: (_compile current_year current_day part)
 run part input="input": (_run current_year current_day part input)
 

@@ -96,9 +96,7 @@ parse_boards([A, B, C, D, E | Rest], [Board | Boards]) :-
     parse_boards(Rest, Boards).
 
 input(Calls, Boards) :-
-    open("input", read, Fd),
-    read_stream_to_codes(Fd, Contents),
-    close(Fd),
+    read_stream_to_codes(user_input, Contents),
     split_string(Contents, "\n", " ", [CallStr | BoardStr]),
     split_string(CallStr, ",", " ", CallStrs),
     convert_all(CallStrs, Calls),

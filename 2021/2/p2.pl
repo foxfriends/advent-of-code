@@ -1,12 +1,10 @@
 #!/usr/bin/perl
 
-open(FH, '<', 'input');
-
 $horizontal = 0;
 $depth = 0;
 $aim = 0;
 
-while(<FH>) {
+while(<>) {
     $command = $_;
 
     if ($command =~ /forward (\d+)/) {
@@ -20,5 +18,3 @@ while(<FH>) {
 }
 
 print $depth * $horizontal . "\n";
-
-close(FH);
