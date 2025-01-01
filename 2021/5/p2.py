@@ -1,4 +1,4 @@
-input = open('input', 'r')
+from sys import stdin
 
 map = [[0 for _ in range(1000)] for _ in range(1000)]
 
@@ -16,7 +16,7 @@ def point_range(x1, y1, x2, y2):
         y1 += sy
         yield [x1, y1]
 
-for line in input:
+for line in stdin:
     [[x1, y1], [x2, y2]] = [[int(x) for x in point.strip().split(',')] for point in line.split('->')]
     for [x, y] in point_range(x1, y1, x2, y2):
         map[x][y] += 1
