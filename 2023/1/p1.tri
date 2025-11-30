@@ -1,6 +1,6 @@
 import "trilogy:io" use readlines, println
 import "trilogy:string" use chars
-import "trilogy:array" use filter, map, reduce, collect
+import "trilogy:array" use filter, map, fold, collect
 import "trilogy:parsec" use parse, integer
 
 func is_digit '0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9' = true
@@ -17,6 +17,6 @@ proc main!() {
           >> combine
           >> parse integer
         )
-        |> reduce (+)
-    println!(total)
+        |> fold (+) 0
+    println!("${total}")
 }
