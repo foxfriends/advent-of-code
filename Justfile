@@ -94,4 +94,5 @@ get day=current_day year=default_year:
     curl https://adventofcode.com/{{year}}/day/{{day}}/input \
         -X GET \
         -H "Cookie: session={{session}}" \
+        -H "User-Agent: Cameron Eldridge <cameldridge@gmail.com>" \
         -o {{year}}/{{day}}/input
