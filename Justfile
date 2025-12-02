@@ -41,8 +41,6 @@ _compile year day part:
         ghc {{part}} -O -outputdir.{{part}} > /dev/null
     else if ls | rg "\.cabal\$" -q
         cabal build {{part}} > /dev/null
-    else if test -f {{part}}.erl
-        erl -compile "$fn"
     else if test -f {{part}}.tri
         trilogy compile {{part}}.tri > {{part}}.ll
         clang-19 -O3 {{part}}.ll -o {{part}}
