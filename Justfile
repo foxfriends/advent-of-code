@@ -43,6 +43,10 @@ _compile year day part:
         cabal build {{part}} > /dev/null
     else if test -f {{part}}.erl
         erl -compile "$fn"
+    else if test -f {{part}}.tri
+        trilogy compile {{part}}.tri > {{part}}.ll
+        clang-19 -O3 {{part}}.ll -o {{part}}
+        rm {{part}}.ll
     else if test -d {{part}} -a -f {{part}}/gleam.toml
         pushd {{part}}
         gleam build
@@ -64,7 +68,7 @@ _run year day part input="input":
     else if test -f {{part}}.pl
         time swipl -s "$fn" -g main,halt < {{input}}
     else if test -f {{part}}.tri
-        time trilogy run "$fn" < {{input}}
+        time trilogy run {{part}}.tri < {{input}}
     else if test -f {{part}}.py
         time python3 "$fn" < {{input}}
     else if test -f {{part}}.rb

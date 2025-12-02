@@ -1,0 +1,26 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readline
+import "trilogy:parsec" use parse, char_of, integer, apply
+
+proc rotation!() {
+  let dir = apply <| char_of "LR"
+  let amt = apply integer
+  return if dir == 'R' then amt else -amt
+}
+
+func rotate amt pos = (pos + amt) % 100
+
+proc main!() {
+  let mut zeros = 0
+  let mut pos = 50
+  while true {
+    let rot = with parse rotation readline!()
+      when 'eof cancel break unit
+      else yield
+    pos rotate= rot
+    if pos == 0 {
+      zeros += 1
+    }
+  }
+  dbg!(zeros)
+}

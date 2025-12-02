@@ -3,7 +3,16 @@ import "trilogy:string" use chars
 import "trilogy:array" use filter, map, fold, collect
 import "trilogy:parsec" use parse, integer
 
-func is_digit '0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9' = true
+func is_digit '0' = true
+func is_digit '1' = true
+func is_digit '2' = true
+func is_digit '3' = true
+func is_digit '4' = true
+func is_digit '5' = true
+func is_digit '6' = true
+func is_digit '7' = true
+func is_digit '8' = true
+func is_digit '9' = true
 func is_digit _ = false
 
 func combine [a] = "${a}${a}"
