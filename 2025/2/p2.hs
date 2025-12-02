@@ -15,9 +15,7 @@ takeEvery n str = take n str : takeEvery n (drop n str)
 
 isRepeat str = any isRepeat_ [1 .. (length str `div` 2)]
   where
-    isRepeat_ n
-      | length str `mod` n /= 0 = False
-      | otherwise = all (== (take n str)) (takeEvery n str)
+    isRepeat_ n = all (== (take n str)) (takeEvery n str)
 
 answer contents = sum $ read <$> filter isRepeat (show <$> concat input)
   where
