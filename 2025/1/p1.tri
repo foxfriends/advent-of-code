@@ -14,10 +14,9 @@ proc main!() {
   let mut zeros = 0
   let mut pos = 50
   while true {
-    let rot = with parse rotation readline!()
+    pos rotate= with parse rotation readline!()
       when 'eof cancel break unit
       else yield
-    pos rotate= rot
     if pos == 0 {
       zeros += 1
     }
