@@ -1,0 +1,28 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readline
+import "trilogy:core" use to_string
+import "trilogy:parsec" use apply, parse, sep_by, integer, char
+import "trilogy:string" use length, take, skip
+import "trilogy:iterator" as it
+
+proc range!() {
+  let low = apply integer
+  apply <| char '-'
+  let high = apply integer
+  return low:high
+}
+
+func is_invalid str =
+  length str % 2 == 0
+  && take (length str // 2) str == skip (length str // 2) str
+
+proc main!() {
+  let ranges = parse (sep_by (char ',') range) readline!()
+  let mut total = 0
+  for low:high in ranges {
+    total += it::range low high
+      |> it::filter (is_invalid << to_string)
+      |> it::sum
+  }
+  dbg!(total)
+}

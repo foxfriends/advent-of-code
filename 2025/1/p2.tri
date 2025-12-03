@@ -1,7 +1,8 @@
 import "trilogy:debug" use dbg
-import "trilogy:io" use readline
+import "trilogy:io" use readlines
 import "trilogy:number" use abs
 import "trilogy:parsec" use parse, char_of, integer, apply
+import "trilogy:iterator" as it
 
 proc rotation!() {
   let dir = apply <| char_of "LR"
@@ -10,25 +11,21 @@ proc rotation!() {
 }
 
 func rotate pos amt =
-  if abs amt > 100
-    then yield 'full(abs amt // 100); rotate (amt % 100) pos
-    else pos + amt
+  let full = abs amt // 100,
+  let rotated = pos + amt % 100,
+  let crossed = rotated < 0 || rotated > 99,
+  yield 'rotations(full + if crossed then 1 else 0);
+  (rotated + 100) % 100
 
 proc main!() {
-  let mut zeros = 0
-  let mut pos = 50
-  while true {
-    pos = with rotate pos <| parse rotation readline!()
-      when 'eof cancel break unit
-      when 'full(n) then {
-        zeros += n
-        become unit
-      }
-      else yield
-    if pos < 0 || pos > 99 {
-      zeros += 1
-      pos = (pos + 100) % 100
+  let mut answer = 0
+  with readlines
+    |> it::map (parse rotation)
+    |> it::foldl rotate 50
+    when 'rotations(n) then {
+      answer += n
+      become unit
     }
-  }
-  dbg!(zeros)
+    else yield
+  dbg!(answer)
 }
