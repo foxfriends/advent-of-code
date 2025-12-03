@@ -1,10 +1,11 @@
-module io at "trilogy:io" use readlines, println
-module iter at "trilogy:iter" use map, reduce
-module num at "trilogy:num"
-module str at "trilogy:str" use skip
+import "trilogy:io" use readlines
+import "trilogy:debug" use dbg
+import "trilogy:iterator" use map, foldl
+import "trilogy:string" use skip
+import "trilogy:parsec" use parse, integer
 
-func combine [a] = $"${str::cast a}${str::cast a}"
-func combine [a, .._, b] = $"${str::cast a}${str::cast b}"
+func combine [a] = "${a}${a}"
+func combine [a, .._, b] = "${a}${b}"
 
 func digits "" = []
 func digits s =
@@ -28,7 +29,7 @@ proc main!() {
     let total = readlines
         |> map digits
         |> map combine
-        |> map (num::cast)
-        |> reduce (+)
-    println!(total)
+        |> map (parse integer)
+        |> foldl (+) 0
+    dbg!(total)
 }
