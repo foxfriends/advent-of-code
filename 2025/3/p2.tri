@@ -1,0 +1,32 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:string" use chars, chomp
+import "trilogy:number" use from_digit, max
+import "trilogy:iterator" as it
+import "trilogy:array" as arr use take, skip
+
+func update_state state offset digit =
+  let len = arr::length state,
+  if offset >= len then state
+  else if state.offset < digit then [..take offset state, digit, ..arr::collect <| it::repeat (len - offset - 1) 0]
+  else update_state state (offset + 1) digit
+
+func run_joltage state [] = state
+func run_joltage state [head, ..rest] =
+  let limit = max ((arr::length state) - (arr::length rest) - 1) 0,
+  run_joltage (update_state state limit head) rest
+
+func joltage digits = run_joltage [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] digits
+
+proc main!() {
+  let total = readlines
+    |> it::map (
+      chomp
+      >> chars
+      >> arr::map from_digit
+      >> joltage
+      >> arr::fold (fn a b. a * 10 + b) 0
+    )
+    |> it::sum
+  dbg!(total)
+}

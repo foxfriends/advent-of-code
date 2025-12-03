@@ -1,0 +1,27 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:string" use chars, chomp
+import "trilogy:number" use from_digit
+import "trilogy:iterator" as it
+import "trilogy:array" as arr
+
+func run_joltage (a : b) [only] = if only > b then a:only else a:b
+func run_joltage (a : b) [head, ..rest] =
+  if head > a then run_joltage (head:0) rest
+  else if head > b then run_joltage (a:head) rest
+  else run_joltage (a:b) rest
+
+func joltage digits = run_joltage (0:0) digits
+
+proc main!() {
+  let total = readlines
+    |> it::map (
+      chomp
+      >> chars
+      >> arr::map from_digit
+      >> joltage
+      >> fn a:b. a * 10 + b
+    )
+    |> it::sum
+  dbg!(total)
+}
