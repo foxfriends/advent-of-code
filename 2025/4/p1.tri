@@ -1,0 +1,27 @@
+import "trilogy:debug" use dbg, tap
+import "trilogy:core" use length
+import "trilogy:io" use readall
+import "trilogy:grid" as grid
+import "trilogy:number" use im, re, swap
+import "trilogy:array" use map, filter
+import "trilogy:parsec" use parse, end_by, char, many, char_of
+
+func get g p = with g.(swap <| im p).(re p) when 'mia cancel '.' else yield
+
+proc main!() {
+  let rows = parse (end_by (char '\n') <| many <| char_of "@.") readall!()
+  let g = grid::from!(rows)
+
+  let mut count = 0
+  for pos:'@' in g {
+    let around = grid::surrounding pos
+      # TODO: something is wrong when passing the large record around, the runtime freezes
+      # up. Accessing from the array here instead works a little better, but it's still way
+      # too slow, and not linearly
+      |> map (get rows)
+      |> filter ((==) '@')
+      |> length
+    if around < 4 { count += 1 }
+  }
+  dbg!(count)
+}
