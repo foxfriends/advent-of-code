@@ -12,13 +12,18 @@ surrounding x y =
     (x + 1, y + 1)
   ]
 
+at grid x y = case ((grid !? y) >>= (!? x)) of
+  Just ch -> ch
+  Nothing -> '.'
+
+isBlocked grid (x, y) = at grid x y == '@'
+
 answer input =
   length
     [ 1 | y <- [0 .. length grid - 1],
           x <- [0 .. (length $ grid !! y) - 1],
-          grid !! y !! x == '@',
-          length [1 | (x2, y2) <- surrounding x y,
-                      ((grid !? y2) >>= (!? x2)) == (Just '@')] < 4
+          at grid x y == '@',
+          (length $ filter (isBlocked grid) $ surrounding x y) < 4
     ]
   where
     Right grid = parse ((many $ oneOf "@.") `sepEndBy` char '\n') "" input
