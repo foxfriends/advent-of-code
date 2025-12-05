@@ -1,0 +1,24 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readall
+import "trilogy:array" use sort_by, fold
+import "trilogy:parsec" use parse, apply, integer, char, per_line
+import "trilogy:iterator" as it
+import "trilogy:number" use max
+
+proc input!() {
+  let range = do() {
+    let low = apply integer
+    apply <| char '-'
+    let high = apply integer
+    return low : high
+  }
+  return apply <| per_line range
+}
+
+proc main!() {
+  let fresh:_ = readall!()
+    |> parse input
+    |> sort_by (fn a b. a.'left < b.'left)
+    |> fold (fn (fresh:index) (low:high). fresh + ((max index (high + 1)) - (max index low)):(max index (high + 1))) (0:0)
+  dbg!(fresh)
+}

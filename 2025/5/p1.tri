@@ -1,0 +1,31 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readall
+import "trilogy:parsec" use parse, apply, integer, char, per_line
+import "trilogy:iterator" as it
+
+proc input!() {
+  let range = do() {
+    let low = apply integer
+    apply <| char '-'
+    let high = apply integer
+    return low : high
+  }
+  let ranges = apply <| per_line range
+  apply <| char '\n'
+  apply <| char '\n'
+  let items = apply <| per_line integer
+  return ranges : items
+}
+
+func contains item (low:high) = item >= low && item <= high
+
+proc main!() {
+  let ranges : items = parse input readall!()
+  let mut fresh = 0
+  for item in items {
+    if it::any (contains item) <| it::from ranges {
+      fresh += 1
+    }
+  }
+  dbg!(fresh)
+}
