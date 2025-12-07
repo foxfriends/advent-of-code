@@ -1,0 +1,46 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:string" use split, chomp
+import "trilogy:number" use max, im, swap
+import "trilogy:array" use map, reduce, length
+import "trilogy:set" use push, contains, collect
+import "trilogy:iterator" as it
+
+proc collect_input!(it) {
+  let mut start = unit
+  let mut splitters = [||]
+  with it!()
+    when 'next(pos:'S') then {
+      start = pos
+      become unit
+    }
+    when 'next(pos:'^') then {
+      push!(splitters, pos)
+      become unit
+    }
+    when 'next(_) resume unit
+    else yield
+  return start:splitters
+}
+
+proc main!() {
+  let start:splitters = collect_input!(
+    readlines
+    |> it::map (it::enumerate << it::from << chomp)
+    |> it::enumerate
+    |> it::flat_map (fn y:inner. it::map (fn x:v. x + y * 0i1 : v) inner)
+  )
+  let max_y = reduce max <| [swap <| im pos for pos in splitters]
+  let mut splits = 0
+  let mut i = 0
+  let mut beams = [|start|]
+  while i <= max_y {
+    splits += length [beam for beam in beams and is contains beam splitters]
+    beams = beams
+      |> it::from
+      |> it::flat_map (fn beam. if contains beam splitters then it::from [beam + 1i1, beam - 1 + 0i1] else it::of (beam + 0i1))
+      |> collect
+    i += 1
+  }
+  dbg!(splits)
+}

@@ -21,7 +21,7 @@ proc main!() {
   let mut answer = 0
   with readlines
     |> it::map (parse rotation)
-    |> it::foldl rotate 50
+    |> it::fold rotate 50
     when 'rotations(n) then {
       answer += n
       become unit
