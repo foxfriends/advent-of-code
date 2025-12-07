@@ -1,0 +1,22 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readall
+import "trilogy:parsec" use parse, many, many_1, char_of, sep_by, per_line, prefixed_by, followed_by, choice, integer, char
+import "trilogy:array" use transpose, reduce, map
+
+func calculate [..nums, '+'] = reduce (+) nums
+func calculate [..nums, '*'] = reduce (*) nums
+
+proc main!() {
+  let parser = per_line
+    <| followed_by (many <| char ' ')
+    <| prefixed_by (many <| char ' ')
+    <| sep_by (many_1 <| char ' ')
+    <| choice [integer, char_of "+*"]
+  dbg!(
+    readall!()
+    |> parse parser
+    |> transpose
+    |> map calculate
+    |> reduce (+)
+  )
+}

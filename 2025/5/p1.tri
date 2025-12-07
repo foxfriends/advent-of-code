@@ -12,7 +12,6 @@ proc input!() {
   }
   let ranges = apply <| per_line range
   apply <| char '\n'
-  apply <| char '\n'
   let items = apply <| per_line integer
   return ranges : items
 }

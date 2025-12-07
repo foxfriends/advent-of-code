@@ -1,0 +1,39 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readall
+import "trilogy:parsec" use parse, many, many_1, char_of, sep_by, per_line, prefixed_by, followed_by, integer, char, apply, option
+import "trilogy:array" use transpose, reduce, map, flatten, reverse
+import "trilogy:string" use split, chars, join
+
+func calculate [..nums, '+'] = reduce (+) nums
+func calculate [..nums, '*'] = reduce (*) nums
+
+proc row!() {
+  apply <| many <| char ' '
+  let n = apply integer
+  apply <| many <| char ' '
+  return match apply <| option <| char_of "+*"
+    case 'some(ch) then [n, ch]
+    else then [n]
+}
+
+proc blank!() {
+  apply <| many_1 <| char ' '
+  apply <| char '\n'
+}
+
+proc main!() {
+  let parser = sep_by blank <| per_line row
+  dbg!(
+    readall!()
+    |> split "\n"
+    |> map chars
+    |> transpose
+    |> map (join "")
+    |> reverse
+    |> join "\n"
+    |> parse parser
+    |> map flatten
+    |> map calculate
+    |> reduce (+)
+  )
+}
