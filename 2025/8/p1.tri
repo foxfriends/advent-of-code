@@ -1,8 +1,10 @@
 import "trilogy:debug" use dbg
 import "trilogy:io" use readlines
 import "trilogy:parsec" use parse, sep_by, char, integer, per_line
-import "trilogy:array" use collect, sort_by, length
+import "trilogy:array" use push, collect, sort_by, take, reduce
+import "trilogy:core" use length
 import "trilogy:iterator" as it
+import "trilogy:set" use union
 
 func dist [x1, y1, z1]:[x2, y2, z2] = (x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2
 func dist_asc a b = dist a < dist b
@@ -10,9 +12,30 @@ func dist_asc a b = dist a < dist b
 proc main!() {
   let points = readlines
     |> it::map (parse (sep_by (char ',') integer))
-    |> it::enumerate
     |> collect
-  dbg!(length points)
-  let edges = sort_by dist_asc [a:b for i:a in points and j:b in points and is i < j]
+
+  let mut edges = []
+  let mut i = 0
+  while i < length points {
+    let mut j = i + 1
+    while j < length points {
+      push!(edges, points.i:points.j)
+      j += 1
+    }
+    i += 1
+  }
   dbg!(length edges)
+  edges sort_by= dist_asc
+  dbg!("sorted")
+  edges take= 1000
+  dbg!("taken")
+
+  let mut sets = {| pos => [| pos |] for pos in points |}
+  for a:b in edges {
+    sets.a union= sets.b
+    for el in sets.a {
+      sets.el = sets.a
+    }
+  }
+  dbg!(reduce (*) <| take 3 <| sort_by (>) [length set for set in [| v for _:v in sets |]])
 }

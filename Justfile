@@ -11,6 +11,10 @@ current_day := replace_regex(relative, "^/\\d+/(\\d+)$|.*", "$1")
 
 default_year := if current_year != "" { current_year } else { env_year }
 
+llvm_prefix := env("LLVM_SYS_191_PREFIX", "")
+clang := if llvm_prefix == "" { "clang" } else { llvm_prefix / "bin/clang" }
+
+
 p1 input="input": (part "p1" current_day current_year input)
 p2 input="input": (part "p2" current_day current_year input)
 compile part: (_compile current_year current_day part)
@@ -43,7 +47,7 @@ _compile year day part:
         cabal build {{part}} > /dev/null
     else if test -f {{part}}.tri
         trilogy compile {{part}}.tri > {{part}}.ll
-        clang-19 -O3 {{part}}.ll -o {{part}}
+        {{clang}} -O3 {{part}}.ll -o {{part}}
         rm {{part}}.ll
     else if test -d {{part}} -a -f {{part}}/gleam.toml
         pushd {{part}}
