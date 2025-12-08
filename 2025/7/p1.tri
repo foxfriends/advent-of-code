@@ -1,7 +1,7 @@
 import "trilogy:debug" use dbg
 import "trilogy:io" use readlines
 import "trilogy:string" use split, chomp
-import "trilogy:number" use max, im, swap
+import "trilogy:number" use max, im
 import "trilogy:array" use map, reduce, length
 import "trilogy:set" use push, contains, collect
 import "trilogy:iterator" as it
@@ -30,7 +30,7 @@ proc main!() {
     |> it::enumerate
     |> it::flat_map (fn y:inner. it::map (fn x:v. x + y * 0i1 : v) inner)
   )
-  let max_y = reduce max <| [swap <| im pos for pos in splitters]
+  let max_y = reduce max <| [im pos for pos in splitters]
   let mut splits = 0
   let mut i = 0
   let mut beams = [|start|]
