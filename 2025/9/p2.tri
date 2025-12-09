@@ -94,9 +94,10 @@ proc main!() {
   # Then we just run standard collision of the area boxes with those
   let mut best = 0
   let mut i = 0
-  while i < length points {
+  let len = length points
+  while i < len {
     let mut j = i + 1
-    while j < length points {
+    while j < len {
       let a = points.i
       let b = points.j
       if !(any (collide (a:b)) illegal) {
