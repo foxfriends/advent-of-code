@@ -4,6 +4,7 @@ import "trilogy:parsec" use parse, sep_by, char, integer, per_line
 import "trilogy:array" use collect, sort_by, take, reduce
 import "trilogy:core" use length
 import "trilogy:iterator" as it
+import "trilogy:compare" use asc
 import "trilogy:set" use union
 import "trilogy:heap" use heap
 

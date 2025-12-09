@@ -1,0 +1,109 @@
+import "trilogy:io" use readlines
+import "trilogy:debug" use dbg
+import "trilogy:parsec" use parse, sep_by, char, integer
+import "trilogy:array" use collect, length, map, reduce, first, tail, filter, sort, sort_by, any, push, zip
+import "trilogy:number" use abs
+import "trilogy:compare" use max, asc
+import "trilogy:iterator" as it
+
+func area [x1, y1] [x2, y2] = (abs (x1 - x2) + 1) * (abs (y1 - y2) + 1)
+
+func is_horizontal [_, y1]:[_, y2] = y1 == y2
+func is_vertical [x1, _]:[x2, _] = x1 == x2
+
+func collide p1:p2 [bx1, by1]:[bx2, by2] =
+  let [px1, px2] = sort [x p1, x p2],
+  let [py1, py2] = sort [y p1, y p2],
+  px1 < bx2 && px2 > bx1 && py1 < by2 && py2 > by1
+
+func x [a, _] = a
+func y [_, a] = a
+
+func left a:_ = a
+
+func contains_by key (a:b) (p1:p2) =
+  let [w, z] = sort [key p1, key p2],
+  w <= a && a <= z && w <= b && b <= z
+
+proc main!() {
+  let points = readlines
+    |> it::map (parse (sep_by (char ',') integer))
+    |> collect
+  dbg!('points(length points))
+
+  let edges = zip points [..tail points, first points]
+  dbg!('edges(length edges))
+
+  # It has been observed that the shape is convex and without holes or interior crossings
+  #
+  # So we can make a series of rectangles that represent the illegal area by sending beams
+  # from each edge
+  let verticals = sort_by (asc <| (x << left)) <| filter is_vertical edges
+  dbg!('verticals(length verticals))
+
+  let horizontals = sort_by (asc <| (y << left)) <| filter is_horizontal edges
+  dbg!('horizontals(length horizontals))
+
+  let xs = map (x << left) verticals
+  dbg!('xs(length xs))
+
+  let ys = map (y << left) horizontals
+  dbg!('ys(length ys))
+
+  let [min_x, .._, max_x] = xs
+  let [min_y, .._, max_y] = ys
+
+  let illegal = []
+
+  dbg!(min_x:max_x)
+  dbg!(min_y:max_y)
+
+  let x_ranges = zip xs (tail xs)
+  let mut i = 0
+  while i < length x_ranges {
+    let x1:x2 and range = x_ranges.i
+    i += 1
+    if x1 == x2 { continue unit }
+    let [y1, .._, y2] = horizontals
+      |> filter (contains_by x range)
+      |> map (y << left)
+      |> sort
+    push!(illegal, [x1, min_y]:[x2, y1])
+    push!(illegal, [x1, y2]:[x2, max_y])
+  }
+  dbg!('illegal(length illegal))
+
+  let y_ranges = zip ys (tail ys)
+  let mut i = 0
+  while i < length y_ranges {
+    let y1:y2 and range = y_ranges.i
+    i += 1
+    if y1 == y2 { continue unit }
+    let [x1, .._, x2] = verticals
+      |> filter (contains_by y range)
+      |> map (x << left)
+      |> sort
+    push!(illegal, [min_x, y1]:[x1, y2])
+    push!(illegal, [x2, y1]:[max_x, y2])
+  }
+  dbg!('illegal(length illegal))
+
+  # Then we just run standard collision of the area boxes with those
+  let mut best = 0
+  let mut i = 0
+  let len = length points
+  while i < len {
+    let mut j = i + 1
+    while j < len {
+      let a = points.i
+      let b = points.j
+      let candidate = area a b
+      if candidate > best && !(any (collide (a:b)) illegal) {
+        best = candidate
+      }
+      j += 1
+    }
+    i += 1
+  }
+  dbg!(best)
+}

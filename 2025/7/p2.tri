@@ -1,7 +1,8 @@
 import "trilogy:debug" use dbg
 import "trilogy:io" use readlines
 import "trilogy:string" use split, chomp
-import "trilogy:number" use max, im
+import "trilogy:number" use im
+import "trilogy:compare" use max
 import "trilogy:array" use map, reduce, length
 import "trilogy:set" use push, contains, collect
 import "trilogy:iterator" as it
