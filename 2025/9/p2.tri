@@ -14,10 +14,7 @@ func is_vertical [x1, _]:[x2, _] = x1 == x2
 func collide p1:p2 [bx1, by1]:[bx2, by2] =
   let [px1, px2] = sort [x p1, x p2],
   let [py1, py2] = sort [y p1, y p2],
-  px1 < bx2
-  && px2 > bx1
-  && py1 < by2
-  && py2 > by1
+  px1 < bx2 && px2 > bx1 && py1 < by2 && py2 > by1
 
 func x [a, _] = a
 func y [_, a] = a
