@@ -100,8 +100,9 @@ proc main!() {
     while j < len {
       let a = points.i
       let b = points.j
-      if !(any (collide (a:b)) illegal) {
-        best max= (area a b)
+      let candidate = area a b
+      if candidate > best && !(any (collide (a:b)) illegal) {
+        best = candidate
       }
       j += 1
     }
