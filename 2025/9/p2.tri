@@ -12,8 +12,8 @@ func is_horizontal [_, y1]:[_, y2] = y1 == y2
 func is_vertical [x1, _]:[x2, _] = x1 == x2
 
 func collide p1:p2 [bx1, by1]:[bx2, by2] =
-  let [px1, px2] = sort [x p1, x p2],
-  let [py1, py2] = sort [y p1, y p2],
+  let px1:px2 = if x p1 < x p2 then x p1:x p2 else x p2:x p1,
+  let py1:py2 = if y p1 < y p2 then y p1:y p2 else y p2:y p1,
   px1 < bx2 && px2 > bx1 && py1 < by2 && py2 > by1
 
 func x [a, _] = a
@@ -58,21 +58,6 @@ proc main!() {
   dbg!(min_x:max_x)
   dbg!(min_y:max_y)
 
-  let x_ranges = zip xs (tail xs)
-  let mut i = 0
-  while i < length x_ranges {
-    let x1:x2 and range = x_ranges.i
-    i += 1
-    if x1 == x2 { continue unit }
-    let [y1, .._, y2] = horizontals
-      |> filter (contains_by x range)
-      |> map (y << left)
-      |> sort
-    push!(illegal, [x1, min_y]:[x2, y1])
-    push!(illegal, [x1, y2]:[x2, max_y])
-  }
-  dbg!('illegal(length illegal))
-
   let y_ranges = zip ys (tail ys)
   let mut i = 0
   while i < length y_ranges {
@@ -82,9 +67,22 @@ proc main!() {
     let [x1, .._, x2] = verticals
       |> filter (contains_by y range)
       |> map (x << left)
-      |> sort
     push!(illegal, [min_x, y1]:[x1, y2])
     push!(illegal, [x2, y1]:[max_x, y2])
+  }
+  dbg!('illegal(length illegal))
+
+  let x_ranges = zip xs (tail xs)
+  let mut i = 0
+  while i < length x_ranges {
+    let x1:x2 and range = x_ranges.i
+    i += 1
+    if x1 == x2 { continue unit }
+    let [y1, .._, y2] = horizontals
+      |> filter (contains_by x range)
+      |> map (y << left)
+    push!(illegal, [x1, min_y]:[x2, y1])
+    push!(illegal, [x1, y2]:[x2, max_y])
   }
   dbg!('illegal(length illegal))
 
@@ -98,8 +96,10 @@ proc main!() {
       let a = points.i
       let b = points.j
       let candidate = area a b
-      if candidate > best && !(any (collide (a:b)) illegal) {
-        best = candidate
+      if candidate > best {
+        if !(any (collide (a:b)) illegal) {
+          best = candidate
+        }
       }
       j += 1
     }
