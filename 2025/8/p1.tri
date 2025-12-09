@@ -4,10 +4,10 @@ import "trilogy:parsec" use parse, sep_by, char, integer, per_line
 import "trilogy:array" use push, collect, sort_by, take, reduce
 import "trilogy:core" use length
 import "trilogy:iterator" as it
+import "trilogy:compare" use asc
 import "trilogy:set" use union
 
 func dist [x1, y1, z1]:[x2, y2, z2] = (x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2
-func dist_asc a b = dist a < dist b
 
 proc main!() {
   let points = readlines
@@ -25,7 +25,7 @@ proc main!() {
     i += 1
   }
   dbg!(length edges)
-  edges sort_by= dist_asc
+  edges sort_by= (asc dist)
   dbg!("sorted")
   edges take= 1000
   dbg!("taken")
