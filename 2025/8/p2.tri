@@ -1,7 +1,7 @@
 import "trilogy:debug" use dbg
 import "trilogy:io" use readlines
 import "trilogy:parsec" use parse, sep_by, char, integer, per_line
-import "trilogy:array" use collect, sort_by, take, reduce
+import "trilogy:array" use collect
 import "trilogy:core" use length
 import "trilogy:iterator" as it
 import "trilogy:set" use union
@@ -30,13 +30,17 @@ proc main!() {
 
   let mut sets = {| pos => [| pos |] for pos in points |}
   let mut i = 0
-  while i < 1000 {
+  while length edges > 0 {
     i += 1
     let a:b = edge_heap::pop!(edges)
+    if sets.a == sets.b { continue unit }
     sets.a union= sets.b
-    for el in sets.a {
+    if length (sets.a) == length points {
+      dbg!(a.0 * b.0)
+      return 0
+    }
+    for el in sets.a { # NOTE: this for loop is the slowest part...
       sets.el = sets.a
     }
   }
-  dbg!(reduce (*) <| take 3 <| sort_by (>) [length set for set in [| v for _:v in sets |]])
 }
