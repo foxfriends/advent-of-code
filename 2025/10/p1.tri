@@ -1,0 +1,59 @@
+import "trilogy:io" use readlines
+import "trilogy:debug" use dbg
+import "trilogy:core" use to_array, length
+import "trilogy:bits" as bits
+import "trilogy:compare" use min
+import "trilogy:parsec" use parse, apply, between, many_1, char_of, char, integer, sep_by_1
+import "trilogy:array" use map, fold, filter, reduce
+import "trilogy:set" use contains, difference, union, collect
+import "trilogy:iterator" as it
+
+func target_state '.' = false
+func target_state '#' = true
+
+func set_bit bb index = bb | (0bb1 ~~> index)
+
+proc machine!() {
+  let target = bits::from_array
+    <| map target_state
+    <| apply
+    <| between (char '[') (char ']')
+    <| many_1
+    <| char_of ".#"
+  apply <| char ' '
+  let buttons = map (fold set_bit (target ^ target))
+    <| apply
+    <| sep_by_1 (char ' ')
+    <| between (char '(') (char ')')
+    <| sep_by_1 (char ',') integer
+  apply <| char ' '
+  let _joltage = apply
+    <| between (char '{') (char '}')
+    <| sep_by_1 (char ',') integer
+  return target:buttons
+}
+
+
+proc solve!(target:buttons) {
+  let mut visited = [| target ^ target |]
+  let mut states = [| target ^ target |]
+  let mut i = 0
+  while !(contains target states) {
+    states = states
+      |> it::from
+      |> it::flat_map (fn state. it::from <| map ((^) state) buttons)
+      |> collect
+    visited union= states
+    states = difference states visited
+    i += 1
+  }
+  return i
+}
+
+proc main!() {
+  readlines
+  |> it::map (parse machine)
+  |> it::map solve
+  |> it::fold (+) 0
+  |> dbg
+}

@@ -1,0 +1,63 @@
+import "trilogy:io" use readlines
+import "trilogy:debug" use dbg
+import "trilogy:core" use to_array, length
+import "trilogy:bits" as bits
+import "trilogy:record" use collect, merge_by, contains_key
+import "trilogy:compare" use min
+import "trilogy:parsec" use parse, apply, between, many_1, char_of, char, integer, sep_by_1
+import "trilogy:array" use map, fold, filter
+import "trilogy:iterator" as it
+
+proc machine!() {
+  let _target = apply
+    <| between (char '[') (char ']')
+    <| many_1
+    <| char_of ".#"
+  apply <| char ' '
+  let buttons = apply
+    <| sep_by_1 (char ' ')
+    <| between (char '(') (char ')')
+    <| sep_by_1 (char ',') integer
+  apply <| char ' '
+  let joltage = apply
+    <| between (char '{') (char '}')
+    <| sep_by_1 (char ',') integer
+  return joltage:buttons
+}
+
+proc update_state!(state, n) {
+  state.n += 1
+}
+
+func apply_button state [] = state
+func apply_button state [n, ..rest] = apply_button update_state!(state, n) rest
+
+func press_button round states button = states
+  |> to_array
+  |> filter (fn state:presses. presses == round)
+  |> map (fn state:presses. apply_button state button : presses + 1)
+  |> it::from
+  |> collect
+
+func below [] [] = true
+func below [a, ..ra] [b, ..rb] = if b <= a then below ra rb else false
+
+proc solve!(target:buttons) {
+  let mut states = {| map (fn _. 0) target => 0 |}
+  let mut i = 0
+  while !(contains_key target states) {
+    states = map (press_button i states) buttons
+      |> filter (fn state:_. below target state)
+      |> fold (merge_by (fn k a b. min a b)) states
+    i += 1
+  }
+  return states.target
+}
+
+proc main!() {
+  readlines
+  |> it::map (parse machine)
+  |> it::map solve
+  |> it::fold (+) 0
+  |> dbg
+}
