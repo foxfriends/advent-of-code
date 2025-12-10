@@ -2,10 +2,10 @@ import "trilogy:io" use readlines
 import "trilogy:debug" use dbg
 import "trilogy:core" use to_array, length
 import "trilogy:bits" as bits
-import "trilogy:record" use collect, merge_by, contains_key
+import "trilogy:set" use contains, union, collect, difference
 import "trilogy:compare" use min
 import "trilogy:parsec" use parse, apply, between, many_1, char_of, char, integer, sep_by_1
-import "trilogy:array" use map, fold, filter
+import "trilogy:array" use map, fold, filter, reverse
 import "trilogy:iterator" as it
 
 proc machine!() {
@@ -19,45 +19,50 @@ proc machine!() {
     <| between (char '(') (char ')')
     <| sep_by_1 (char ',') integer
   apply <| char ' '
-  let joltage = apply
+  let joltage = fold (fn acc n. n:acc) unit
+    <| reverse
+    <| apply
     <| between (char '{') (char '}')
     <| sep_by_1 (char ',') integer
   return joltage:buttons
 }
 
-proc update_state!(state, n) {
-  state.n += 1
-}
+func update_state n:rest 0 = n + 1 : rest
+func update_state n:rest i = n : update_state rest (i - 1)
 
-func apply_button state [] = state
-func apply_button state [n, ..rest] = apply_button update_state!(state, n) rest
+func press_button state [] = state
+func press_button state [n, ..rest] = press_button (update_state state n) rest
 
-func press_button round states button = states
-  |> to_array
-  |> filter (fn state:presses. presses == round)
-  |> map (fn state:presses. apply_button state button : presses + 1)
-  |> it::from
-  |> collect
+func below unit unit = true
+func below a:ra b:rb = if b <= a then below ra rb else false
 
-func below [] [] = true
-func below [a, ..ra] [b, ..rb] = if b <= a then below ra rb else false
+func zero unit = unit
+func zero _ : rest = 0 : zero rest
 
 proc solve!(target:buttons) {
-  let mut states = {| map (fn _. 0) target => 0 |}
+  let mut visited = [| zero target |]
+  let mut states = [| zero target |]
   let mut i = 0
-  while !(contains_key target states) {
-    states = map (press_button i states) buttons
-      |> filter (fn state:_. below target state)
-      |> fold (merge_by (fn k a b. min a b)) states
+  while !(contains target states) {
+    dbg!(i)
+    let new_states = states
+      |> it::from
+      |> it::flat_map (fn state. it::from <| map (press_button state) buttons)
+      |> it::filter (below target)
+      |> collect
+    states = difference new_states visited
+    visited union= new_states
     i += 1
   }
-  return states.target
+  return i
 }
 
 proc main!() {
   readlines
   |> it::map (parse machine)
+  |> it::map dbg
   |> it::map solve
+  |> it::map dbg
   |> it::fold (+) 0
   |> dbg
 }
