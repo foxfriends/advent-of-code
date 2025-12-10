@@ -1,12 +1,10 @@
 import "trilogy:io" use readlines
 import "trilogy:debug" use dbg
-import "trilogy:core" use to_array, length
-import "trilogy:bits" as bits
-import "trilogy:set" use contains, union, collect, difference
-import "trilogy:compare" use min
+import "trilogy:compare" use min, max, asc
 import "trilogy:parsec" use parse, apply, between, many_1, char_of, char, integer, sep_by_1
-import "trilogy:array" use map, fold, filter, reverse
+import "trilogy:array" use map, fold, filter, reverse, sort_by, reduce, all, flatten
 import "trilogy:iterator" as it
+import "trilogy:set" as set use contains
 
 proc machine!() {
   let _target = apply
@@ -19,40 +17,54 @@ proc machine!() {
     <| between (char '(') (char ')')
     <| sep_by_1 (char ',') integer
   apply <| char ' '
-  let joltage = fold (fn acc n. n:acc) unit
-    <| reverse
-    <| apply
+  let joltage = apply
     <| between (char '{') (char '}')
     <| sep_by_1 (char ',') integer
   return joltage:buttons
 }
 
-func update_state n:rest 0 = n + 1 : rest
-func update_state n:rest i = n : update_state rest (i - 1)
+func limit_within target button = reduce min <| map ((.) target) button
 
-func press_button state [] = state
-func press_button state [n, ..rest] = press_button (update_state state n) rest
+func sub_at 0 n [m, ..arr] = [m - n, ..arr]
+func sub_at i n [m, ..arr] = [m, ..sub_at (i - 1) n arr]
 
-func below unit unit = true
-func below a:ra b:rb = if b <= a then below ra rb else false
+func apply_button _ [] target = target
+func apply_button n [i, ..rest] target = apply_button n rest <| sub_at i n <| target
 
-func zero unit = unit
-func zero _ : rest = 0 : zero rest
+func covers target coverage =
+  it::from target
+  |> it::enumerate
+  |> it::all (fn i:v. v == 0 || contains i coverage)
+
+proc solvable!(remaining, target, all_buttons and [button, ..buttons]) {
+  if remaining < reduce max target || !(covers target <| set::collect <| it::from <| flatten all_buttons) {
+    return false
+  }
+  let limit = min remaining <| limit_within target button
+  return it::range limit 0
+    |> it::any (fn times.
+      let new_target = apply_button times button target,
+      if all ((==) 0) new_target
+        then true
+        else buttons != [] && solvable!(remaining - times, new_target, prioritize new_target buttons)
+    )
+}
+
+func range_size target buttons button =
+  let others = set::collect <| it::from <| flatten <| filter ((!=) button) buttons,
+  let upper = limit_within target button,
+  let lower = if covers target others then 0 else upper,
+  upper - lower
+
+func prioritize target buttons =
+  sort_by (asc <| range_size target buttons) buttons
 
 proc solve!(target:buttons) {
-  let mut visited = [| zero target |]
-  let mut states = [| zero target |]
-  let mut i = 0
-  while !(contains target states) {
-    dbg!(i)
-    let new_states = states
-      |> it::from
-      |> it::flat_map (fn state. it::from <| map (press_button state) buttons)
-      |> it::filter (below target)
-      |> collect
-    states = difference new_states visited
-    visited union= new_states
+  let mut i = reduce max target
+  let buttons_ordered = prioritize target buttons
+  while !solvable!(i, target, buttons_ordered) {
     i += 1
+    dbg!('try(i))
   }
   return i
 }
@@ -60,9 +72,7 @@ proc solve!(target:buttons) {
 proc main!() {
   readlines
   |> it::map (parse machine)
-  |> it::map dbg
   |> it::map solve
-  |> it::map dbg
   |> it::fold (+) 0
   |> dbg
 }
