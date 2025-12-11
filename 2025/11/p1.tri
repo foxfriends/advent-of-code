@@ -19,6 +19,5 @@ func paths_from from {| ^from => to, ..rest |} =
 
 proc main!() {
   let graph = rec::collect <| it::map (parse connection) <| readlines
-  dbg!(graph)
   dbg!(paths_from "you" graph)
 }

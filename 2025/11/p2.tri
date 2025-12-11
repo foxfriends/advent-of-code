@@ -34,19 +34,18 @@ proc pathfinder!(graph) {
 
 proc main!() {
   let graph = rec::collect <| it::map (parse connection) <| readlines
-  dbg!(graph)
 
   let paths_between = pathfinder!(graph)
   let dac_fft = paths_between "dac" "fft"
 
   if dac_fft == 0 {
-    let inner = dbg!(paths_between "fft" "dac")
-    let prefix = dbg!(paths_between "svr" "fft")
-    let suffix = dbg!(paths_between "dac" "out")
+    let inner = paths_between "fft" "dac"
+    let prefix = paths_between "svr" "fft"
+    let suffix = paths_between "dac" "out"
     dbg!(inner * prefix * suffix)
   } else {
-    let prefix = dbg!(paths_between "svr" "dac")
-    let suffix = dbg!(paths_between "fft" "out")
+    let prefix = paths_between "svr" "dac"
+    let suffix = paths_between "fft" "out"
     dbg!(dac_fft * prefix * suffix)
   }
 }
