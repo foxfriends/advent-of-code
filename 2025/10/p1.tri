@@ -33,18 +33,17 @@ proc machine!() {
   return target:buttons
 }
 
-
 proc solve!(target:buttons) {
   let mut visited = [| target ^ target |]
   let mut states = [| target ^ target |]
   let mut i = 0
   while !(contains target states) {
-    states = states
+    let new_states = states
       |> it::from
       |> it::flat_map (fn state. it::from <| map ((^) state) buttons)
       |> collect
-    visited union= states
-    states = difference states visited
+    states = difference new_states visited
+    visited union= new_states
     i += 1
   }
   return i

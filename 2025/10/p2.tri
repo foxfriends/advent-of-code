@@ -1,12 +1,10 @@
 import "trilogy:io" use readlines
 import "trilogy:debug" use dbg
-import "trilogy:core" use to_array, length
-import "trilogy:bits" as bits
-import "trilogy:record" use collect, merge_by, contains_key
-import "trilogy:compare" use min
+import "trilogy:compare" use min, max, asc
 import "trilogy:parsec" use parse, apply, between, many_1, char_of, char, integer, sep_by_1
-import "trilogy:array" use map, fold, filter
+import "trilogy:array" use map, fold, filter, reverse, sort_by, reduce, all, flatten
 import "trilogy:iterator" as it
+import "trilogy:set" as set use contains
 
 proc machine!() {
   let _target = apply
@@ -25,33 +23,50 @@ proc machine!() {
   return joltage:buttons
 }
 
-proc update_state!(state, n) {
-  state.n += 1
+func limit_within target button = reduce min <| map ((.) target) button
+
+func sub_at 0 n [m, ..arr] = [m - n, ..arr]
+func sub_at i n [m, ..arr] = [m, ..sub_at (i - 1) n arr]
+
+func apply_button _ [] target = target
+func apply_button n [i, ..rest] target = apply_button n rest <| sub_at i n <| target
+
+func covers target coverage =
+  it::from target
+  |> it::enumerate
+  |> it::all (fn i:v. v == 0 || contains i coverage)
+
+proc solvable!(remaining, target, all_buttons and [button, ..buttons]) {
+  if remaining < reduce max target || !(covers target <| set::collect <| it::from <| flatten all_buttons) {
+    return false
+  }
+  let limit = min remaining <| limit_within target button
+  return it::range limit 0
+    |> it::any (fn times.
+      let new_target = apply_button times button target,
+      if all ((==) 0) new_target
+        then true
+        else buttons != [] && solvable!(remaining - times, new_target, prioritize new_target buttons)
+    )
 }
 
-func apply_button state [] = state
-func apply_button state [n, ..rest] = apply_button update_state!(state, n) rest
+func range_size target buttons button =
+  let others = set::collect <| it::from <| flatten <| filter ((!=) button) buttons,
+  let upper = limit_within target button,
+  let lower = if covers target others then 0 else upper,
+  upper - lower
 
-func press_button round states button = states
-  |> to_array
-  |> filter (fn state:presses. presses == round)
-  |> map (fn state:presses. apply_button state button : presses + 1)
-  |> it::from
-  |> collect
-
-func below [] [] = true
-func below [a, ..ra] [b, ..rb] = if b <= a then below ra rb else false
+func prioritize target buttons =
+  sort_by (asc <| range_size target buttons) buttons
 
 proc solve!(target:buttons) {
-  let mut states = {| map (fn _. 0) target => 0 |}
-  let mut i = 0
-  while !(contains_key target states) {
-    states = map (press_button i states) buttons
-      |> filter (fn state:_. below target state)
-      |> fold (merge_by (fn k a b. min a b)) states
+  let mut i = reduce max target
+  let buttons_ordered = prioritize target buttons
+  while !solvable!(i, target, buttons_ordered) {
     i += 1
+    dbg!('try(i))
   }
-  return states.target
+  return i
 }
 
 proc main!() {
