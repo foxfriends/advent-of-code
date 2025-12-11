@@ -1,0 +1,24 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:parsec" use parse, apply, word, sep_by_1, string, char
+import "trilogy:array" use fold, map
+import "trilogy:iterator" as it
+import "trilogy:record" as rec
+
+proc connection!() {
+  let source = apply word
+  apply <| string ": "
+  let outputs = apply (sep_by_1 (char ' ') word)
+  return source:outputs
+}
+
+func paths_from _ {||} = 0
+func paths_from "out" _ = 1
+func paths_from from {| ^from => to, ..rest |} =
+  fold (+) 0 <| map (fn to2. paths_from to2 rest) to
+
+proc main!() {
+  let graph = rec::collect <| it::map (parse connection) <| readlines
+  dbg!(graph)
+  dbg!(paths_from "you" graph)
+}

@@ -1,0 +1,52 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:parsec" use parse, apply, word, sep_by_1, string, char
+import "trilogy:array" use fold, map
+import "trilogy:iterator" as it
+import "trilogy:record" as rec
+
+proc connection!() {
+  let source = apply word
+  apply <| string ": "
+  let outputs = apply (sep_by_1 (char ' ') word)
+  return source:outputs
+}
+
+proc pathfinder!(graph) {
+  let mut cache = {||}
+  let paths_between = do(from, dest) {
+    if from == dest {
+      return 1
+    }
+    if !(rec::contains_key from graph) {
+      return 0
+    }
+    if rec::contains_key (from:dest) cache {
+      return cache.(from:dest)
+    }
+    let to = graph.from
+    let result = fold (+) 0 <| map (fn to2. paths_between!(to2, dest)) to
+    cache.(from:dest) = result
+    return result
+  }
+  return fn a b. paths_between!(a, b)
+}
+
+proc main!() {
+  let graph = rec::collect <| it::map (parse connection) <| readlines
+  dbg!(graph)
+
+  let paths_between = pathfinder!(graph)
+  let dac_fft = paths_between "dac" "fft"
+
+  if dac_fft == 0 {
+    let inner = dbg!(paths_between "fft" "dac")
+    let prefix = dbg!(paths_between "svr" "fft")
+    let suffix = dbg!(paths_between "dac" "out")
+    dbg!(inner * prefix * suffix)
+  } else {
+    let prefix = dbg!(paths_between "svr" "dac")
+    let suffix = dbg!(paths_between "fft" "out")
+    dbg!(dac_fft * prefix * suffix)
+  }
+}
