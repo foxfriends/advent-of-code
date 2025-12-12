@@ -33,18 +33,9 @@ proc machine!() {
   return target:buttons
 }
 
-func choose 0 _ = do() yield 'next([])
-func choose _ [] = do() {}
-func choose n [x, ..xs] = do() {
-  let within = choose (n - 1) xs |> it::map (prepend x)
-  let without = choose n xs
-  within!()
-  without!()
-}
-
 func solve target:buttons =
   it::rangex 1 (length buttons)
-  |> it::flat_map (fn n. choose n buttons)
+  |> it::flat_map (fn n. it::choose n buttons)
   |> it::find (fn chosen. target == reduce (^) chosen)
   |> length
 
