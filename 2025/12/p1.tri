@@ -32,10 +32,16 @@ func spread _ [bb] = bb
 func spread width [bb, ..rest] = bb | (spread width rest ~~> width)
 func expand size bb = bb | bits::init_zero size
 
-func fits_area areas w:h:requirements =
+func possible areas w:h:requirements =
   let total = areas
   |> zip requirements
   |> map (fn a:r. a * r)
+  |> reduce (+),
+  total <= w * h
+
+func trivial w:h:requirements =
+  let total = requirements
+  |> map ((*) 9)
   |> reduce (+),
   total <= w * h 
 
@@ -70,9 +76,8 @@ proc main!() {
   |> split "\n"
   |> it::from
   |> it::map (parse tree)
-  |> it::filter (fits_area <| map area presents)
-  |> it::filter (solve presents)
-  |> it::dbg
+  |> it::filter (possible <| map area presents)
+  |> it::filter (fn tree. trivial tree || solve presents tree)
   |> it::count
   |> dbg
 }
