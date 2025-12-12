@@ -4,7 +4,7 @@ import "trilogy:core" use to_array, length
 import "trilogy:bits" as bits
 import "trilogy:compare" use min
 import "trilogy:parsec" use parse, apply, between, many_1, char_of, char, integer, sep_by_1
-import "trilogy:array" use map, fold, filter, reduce
+import "trilogy:array" use map, fold, filter, reduce, prepend
 import "trilogy:set" use contains, difference, union, collect
 import "trilogy:iterator" as it
 
@@ -33,21 +33,20 @@ proc machine!() {
   return target:buttons
 }
 
-proc solve!(target:buttons) {
-  let mut visited = [| target ^ target |]
-  let mut states = [| target ^ target |]
-  let mut i = 0
-  while !(contains target states) {
-    let new_states = states
-      |> it::from
-      |> it::flat_map (fn state. it::from <| map ((^) state) buttons)
-      |> collect
-    states = difference new_states visited
-    visited union= new_states
-    i += 1
-  }
-  return i
+func choose 0 _ = do() yield 'next([])
+func choose _ [] = do() {}
+func choose n [x, ..xs] = do() {
+  let within = choose (n - 1) xs |> it::map (prepend x)
+  let without = choose n xs
+  within!()
+  without!()
 }
+
+func solve target:buttons =
+  it::rangex 1 (length buttons)
+  |> it::flat_map (fn n. choose n buttons)
+  |> it::find (fn chosen. target == reduce (^) chosen)
+  |> length
 
 proc main!() {
   readlines
