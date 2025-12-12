@@ -42,9 +42,9 @@ func apply_button target [] = target
 func apply_button target [i, ..rest] = apply_button (decr_at i target) rest
 
 func solve_bits buttons target =
-  it::range 1 (length buttons)
+  it::range 0 (length buttons)
   |> it::flat_map (fn n. it::choose n buttons)
-  |> it::filter ((==) target << reduce (^) << map (button_bits (length target)))
+  |> it::filter ((==) target << fold (^) (target ^ target) << map (button_bits (length target)))
 
 proc solver!(buttons) {
   let cache = {||}
@@ -55,9 +55,6 @@ proc solver!(buttons) {
     }
     if all ((==) 0) joltage {
       return 0
-    }
-    if all (fn n. n % 2 == 0) joltage {
-      return solve!(map (fn n. n // 2) joltage) * 2
     }
     let best = joltage
       |> map (fn n. n % 2 == 1)
