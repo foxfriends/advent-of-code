@@ -6,6 +6,7 @@ import "trilogy:compare" use min
 import "trilogy:parsec" use parse, apply, between, many_1, char_of, char, integer, sep_by_1
 import "trilogy:array" use map, fold, filter, reduce, all, prepend
 import "trilogy:set" use contains, difference, union, collect
+import "trilogy:record" use contains_key
 import "trilogy:iterator" as it
 
 func target_state '.' = false
@@ -31,16 +32,7 @@ proc machine!() {
   let joltage = apply
     <| between (char '{') (char '}')
     <| sep_by_1 (char ',') integer
-  return joltage:buttons
-}
-
-func choose 0 _ = do() yield 'next([])
-func choose _ [] = do() {}
-func choose n [x, ..xs] = do() {
-  let within = choose (n - 1) xs |> it::map (prepend x)
-  let without = choose n xs
-  within!()
-  without!()
+  return joltage:solver buttons
 }
 
 func decr_at 0 [m, ..arr] = [m - 1, ..arr]
@@ -50,31 +42,42 @@ func apply_button target [] = target
 func apply_button target [i, ..rest] = apply_button (decr_at i target) rest
 
 func solve_bits buttons target =
-  it::rangex 1 (length buttons)
-  |> it::flat_map (fn n. choose n buttons)
-  |> it::filter (((==) target) << (reduce (^)) << map (button_bits (length target)))
+  it::range 1 (length buttons)
+  |> it::flat_map (fn n. it::choose n buttons)
+  |> it::filter ((==) target << reduce (^) << map (button_bits (length target)))
 
-proc solve!(joltage, buttons) {
-  if all ((==) 0) joltage {
-    return 0
+proc solver!(buttons) {
+  let cache = {||}
+
+  let solve = do(joltage) {
+    if contains_key joltage cache {
+      return cache.joltage
+    }
+    if all ((==) 0) joltage {
+      return 0
+    }
+    if all (fn n. n % 2 == 0) joltage {
+      return solve!(map (fn n. n // 2) joltage) * 2
+    }
+    let best = joltage
+      |> map (fn n. n % 2 == 1)
+      |> bits::from_array
+      |> solve_bits buttons
+      |> it::map (fn sol. fold apply_button joltage sol : length sol)
+      |> it::filter (fn remaining:_. all (fn n. n >= 0) remaining)
+      |> it::flat_map (fn remaining:score. with it::of <| solve!(map (fn n. n // 2) remaining) * 2 + score when 'mia cancel (do() {}) else yield)
+      |> it::reduce min
+    cache.joltage = best
+    return best
   }
-  return joltage
-  |> map (fn n. n % 2 == 1)
-  |> bits::from_array
-  |> solve_bits buttons
-  |> it::map (fn sol. fold apply_button joltage sol : length sol)
-  |> it::filter (fn remaining:_. all (fn n. n >= 0) remaining)
-  |> it::map (fn remaining:score. solve!(map (fn n. n // 2) remaining, buttons) * 2 + score)
-  |> it::map dbg
-  |> it::reduce min
+
+  return solve
 }
 
 proc main!() {
   readlines
   |> it::map (parse machine)
-  |> it::map dbg
-  |> it::map (fn j:b. solve!(j, b))
-  |> it::map dbg
+  |> it::map (fn joltage:solve. solve!(joltage))
   |> it::fold (+) 0
   |> dbg
 }
