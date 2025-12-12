@@ -1,13 +1,24 @@
 import "trilogy:io" use readlines
 import "trilogy:debug" use dbg
-import "trilogy:compare" use min, max, asc
+import "trilogy:core" use to_array, length
+import "trilogy:bits" as bits
+import "trilogy:compare" use min
 import "trilogy:parsec" use parse, apply, between, many_1, char_of, char, integer, sep_by_1
-import "trilogy:array" use map, fold, filter, reverse, sort_by, reduce, all, flatten
+import "trilogy:array" use map, fold, filter, reduce, all, prepend
+import "trilogy:set" use contains, difference, union, collect
 import "trilogy:iterator" as it
-import "trilogy:set" as set use contains
+
+func target_state '.' = false
+func target_state '#' = true
+
+func set_bit bb index = bb | (0bb1 ~~> index)
+
+func button_bits len button = fold set_bit (bits::init_zero len) button
 
 proc machine!() {
-  let _target = apply
+  let target = bits::from_array
+    <| map target_state
+    <| apply
     <| between (char '[') (char ']')
     <| many_1
     <| char_of ".#"
@@ -23,56 +34,47 @@ proc machine!() {
   return joltage:buttons
 }
 
-func limit_within target button = reduce min <| map ((.) target) button
-
-func sub_at 0 n [m, ..arr] = [m - n, ..arr]
-func sub_at i n [m, ..arr] = [m, ..sub_at (i - 1) n arr]
-
-func apply_button _ [] target = target
-func apply_button n [i, ..rest] target = apply_button n rest <| sub_at i n <| target
-
-func covers target coverage =
-  it::from target
-  |> it::enumerate
-  |> it::all (fn i:v. v == 0 || contains i coverage)
-
-proc solvable!(remaining, target, all_buttons and [button, ..buttons]) {
-  if remaining < reduce max target || !(covers target <| set::collect <| it::from <| flatten all_buttons) {
-    return false
-  }
-  let limit = min remaining <| limit_within target button
-  return it::range limit 0
-    |> it::any (fn times.
-      let new_target = apply_button times button target,
-      if all ((==) 0) new_target
-        then true
-        else buttons != [] && solvable!(remaining - times, new_target, prioritize new_target buttons)
-    )
+func choose 0 _ = do() yield 'next([])
+func choose _ [] = do() {}
+func choose n [x, ..xs] = do() {
+  let within = choose (n - 1) xs |> it::map (prepend x)
+  let without = choose n xs
+  within!()
+  without!()
 }
 
-func range_size target buttons button =
-  let others = set::collect <| it::from <| flatten <| filter ((!=) button) buttons,
-  let upper = limit_within target button,
-  let lower = if covers target others then 0 else upper,
-  upper - lower
+func decr_at 0 [m, ..arr] = [m - 1, ..arr]
+func decr_at i [m, ..arr] = [m, ..decr_at (i - 1) arr]
 
-func prioritize target buttons =
-  sort_by (asc <| range_size target buttons) buttons
+func apply_button target [] = target
+func apply_button target [i, ..rest] = apply_button (decr_at i target) rest
 
-proc solve!(target:buttons) {
-  let mut i = reduce max target
-  let buttons_ordered = prioritize target buttons
-  while !solvable!(i, target, buttons_ordered) {
-    i += 1
-    dbg!('try(i))
+func solve_bits buttons target =
+  it::rangex 1 (length buttons)
+  |> it::flat_map (fn n. choose n buttons)
+  |> it::filter (((==) target) << (reduce (^)) << map (button_bits (length target)))
+
+proc solve!(joltage, buttons) {
+  if all ((==) 0) joltage {
+    return 0
   }
-  return i
+  return joltage
+  |> map (fn n. n % 2 == 1)
+  |> bits::from_array
+  |> solve_bits buttons
+  |> it::map (fn sol. fold apply_button joltage sol : length sol)
+  |> it::filter (fn remaining:_. all (fn n. n >= 0) remaining)
+  |> it::map (fn remaining:score. solve!(map (fn n. n // 2) remaining, buttons) * 2 + score)
+  |> it::map dbg
+  |> it::reduce min
 }
 
 proc main!() {
   readlines
   |> it::map (parse machine)
-  |> it::map solve
+  |> it::map dbg
+  |> it::map (fn j:b. solve!(j, b))
+  |> it::map dbg
   |> it::fold (+) 0
   |> dbg
 }
