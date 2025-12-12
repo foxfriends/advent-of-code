@@ -1,0 +1,78 @@
+import "trilogy:io" use readall
+import "trilogy:debug" use dbg
+import "trilogy:bits" as bits use pop_count, concat
+import "trilogy:parsec" as p use parse, run_parser, apply, followed_by, string, integer, char_of, per_line, many_1, sep_by, char
+import "trilogy:array" use length, filter, flatten, reduce, zip, map, rotate_cw, collect
+import "trilogy:string" use split, chomp
+import "trilogy:iterator" as it
+
+proc point!() {
+  return '#' == apply <| char_of "#."
+}
+
+proc present!() {
+  apply <| followed_by (string ":\n") integer
+  return apply <| per_line <| many_1 point
+}
+
+proc tree!() {
+  let w = apply integer
+  apply <| char 'x'
+  let h = apply integer
+  apply <| string ": "
+  let req = apply <| sep_by (char ' ') integer
+  return dbg!(w:h:req)
+}
+
+func id x = x
+
+func area present = flatten present |> filter id |> length
+
+func spread _ [bb] = bb
+func spread width [bb, ..rest] = bb | (spread width rest ~~> width)
+func expand size bb = bb | bits::init_zero size
+
+func fits_area areas w:h:requirements =
+  let total = areas
+  |> zip requirements
+  |> map (fn a:r. a * r)
+  |> reduce (+),
+  total <= w * h 
+
+func rotations arr =
+  let brr = rotate_cw arr,
+  let crr = rotate_cw brr,
+  let drr = rotate_cw crr,
+  [arr, brr, crr, drr]
+
+func place_all _ _ _ [] = true
+func place_all w h state [present, ..rest] =
+  it::range 0 (h - 3)
+  |> it::map ((*) w)
+  |> it::flat_map (fn y. it::range 0 (w - 3) |> it::map ((+) y))
+  |> it::flat_map (fn offset. it::from present |> it::map (fn p. p ~> offset))
+  |> it::filter (fn p. pop_count (state & p) == 0)
+  |> it::map ((|) state)
+  |> it::any (fn st. place_all w h st rest)
+
+func solve presents w:h:requirements =
+  presents
+  |> map (rotations >> map (map (bits::from_array) >> spread w >> expand (w * h)))
+  |> zip requirements
+  |> it::from
+  |> it::flat_map (fn n:arr. it::repeat n arr)
+  |> collect
+  |> place_all w h (bits::init_zero <| w * h)
+
+proc main!() {
+  let presents:rest = run_parser (per_line present) <| chomp readall!()
+  rest
+  |> split "\n"
+  |> it::from
+  |> it::map (parse tree)
+  |> it::filter (fits_area <| map area presents)
+  |> it::filter (solve presents)
+  |> it::dbg
+  |> it::count
+  |> dbg
+}
