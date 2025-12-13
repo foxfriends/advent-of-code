@@ -14,7 +14,7 @@ func rotate pos amt = (pos + amt) % 100
 proc main!() {
   let answer = readlines
     |> it::map (parse rotation)
-    |> it::scanl rotate 50
+    |> it::scan rotate 50
     |> it::filter ((==) 0)
     |> it::count
   dbg!(answer)
