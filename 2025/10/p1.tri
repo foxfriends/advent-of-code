@@ -1,7 +1,7 @@
 import "trilogy:io" use readlines
 import "trilogy:debug" use dbg
 import "trilogy:core" use to_array, length
-import "trilogy:bits" as bits, set_at
+import "trilogy:bits" as bits use set_at
 import "trilogy:compare" use min
 import "trilogy:parsec" use parse, apply, between, many_1, char_of, char, integer, sep_by_1
 import "trilogy:array" use map, fold, filter, reduce, prepend
