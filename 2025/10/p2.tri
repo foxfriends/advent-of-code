@@ -46,12 +46,15 @@ func solve_bits buttons target =
   |> it::flat_map (fn n. it::choose n buttons)
   |> it::filter ((==) target << fold (^) (target ^ target) << map (button_bits (length target)))
 
+func to_tuple [] = unit
+func to_tuple [x, ..xs] = x : to_tuple xs
+
 proc solver!(buttons) {
   let cache = {||}
 
   let solve = do(joltage) {
-    if contains_key joltage cache {
-      return cache.joltage
+    if contains_key (to_tuple joltage) cache {
+      return cache.(to_tuple joltage)
     }
     if all ((==) 0) joltage {
       return 0
@@ -64,7 +67,7 @@ proc solver!(buttons) {
       |> it::filter (fn remaining:_. all (fn n. n >= 0) remaining)
       |> it::flat_map (fn remaining:score. with it::of <| solve!(map (fn n. n // 2) remaining) * 2 + score when 'mia cancel (do() {}) else yield)
       |> it::reduce min
-    cache.joltage = best
+    cache.(to_tuple joltage) = best
     return best
   }
 
@@ -74,7 +77,9 @@ proc solver!(buttons) {
 proc main!() {
   readlines
   |> it::map (parse machine)
+  |> it::map (fn j:s. (dbg j; j:s))
   |> it::map (fn joltage:solve. solve!(joltage))
+  |> it::map dbg
   |> it::fold (+) 0
   |> dbg
 }
