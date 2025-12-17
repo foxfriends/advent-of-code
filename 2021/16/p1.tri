@@ -1,0 +1,49 @@
+import "trilogy:io" use readall
+import "trilogy:debug" use dbg
+import "trilogy:core" use length
+import "trilogy:parsec" use parse, hex_integer, repeat, apply, any, many_1, followed_by, eof
+import "trilogy:bits" as bits
+import "trilogy:string" use chomp
+import "trilogy:array" use reduce
+
+func from_binary [] = 0
+func from_binary [..rest, true] = (from_binary rest * 2) + 1
+func from_binary [..rest, false] = from_binary rest * 2
+
+proc literal!() {
+  let is_continued = apply any
+  apply <| repeat 4 any
+  if is_continued {
+    apply literal
+  }
+  return 0
+}
+
+proc operator!() {
+  let length_type = apply any
+  if length_type == false {
+    let sublength = from_binary <| apply <| repeat 15 any
+    let content_bits = bits::from_array <| apply <| repeat sublength any
+    return reduce (+) <| parse (followed_by eof <| many_1 packet) content_bits
+  } else {
+    let subpacket_count = from_binary <| apply <| repeat 11 any
+    return reduce (+) <| apply <| repeat subpacket_count packet
+  }
+}
+
+proc packet!() {
+  let version = from_binary <| apply <| repeat 3 any
+  let type_id = from_binary <| apply <| repeat 3 any
+  let val = match type_id
+    case 4 then apply literal
+    else then apply operator
+  return version + val
+}
+
+proc main!() {
+  let hex_string = chomp readall!()
+  let binary_input = bits::from <| parse hex_integer hex_string
+  let real_len = length hex_string * 4
+  let real_bits = binary_input <<~ (length binary_input - real_len)
+  dbg!(parse packet real_bits)
+}
