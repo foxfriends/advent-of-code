@@ -1,8 +1,13 @@
-import Debug.Trace
-import Text.Parsec
-import Data.List (sortBy, sort, foldl1, find, nub, sum)
 import Control.Monad (guard)
+import Control.Monad.State
+import Data.Bits
+import Data.Bool
+import Data.Function ((&))
+import Data.List (find, foldl1, nub, sort, sortBy, sum)
+import Data.Map (Map, insert)
+import qualified Data.Map as Map
 import Data.Ord (comparing)
+import Text.Parsec (between, char, digit, many, many1, parse, sepBy1, sepEndBy, (<|>))
 
 integer = read <$> many digit
 
@@ -13,45 +18,57 @@ machine = do
   joltage :: [Int] <- between (char '{') (char '}') $ integer `sepBy1` char ','
   return $ (joltage, buttons)
 
-limitWithin target button = foldl1 min $ fmap (target !!) button
+targetState '.' = False
+targetState '#' = True
 
-subAt 0 n (m:ms) = m - n:ms
-subAt i n (m:ms) = m:subAt (i - 1) n ms
+buttonBits len button = foldl setBit 0 $ map (\n -> len - n - 1) button
 
-applyButton _ [] target = target
-applyButton n (i:rest) target = applyButton n rest $ subAt i n $ target
+decrAt 0 (m : ms) = m - 1 : ms
+decrAt i (m : ms) = m : decrAt (i - 1) ms
 
-covers target coverage =
-  all (\ i -> target !! i == 0 || i `elem` coverage) [0..length target - 1]
+applyButton target [] = target
+applyButton target (i : rest) = applyButton (decrAt i target) rest
 
-solvable _ _ [] = False
-solvable remaining target allButtons@(button:buttons) =
-  if remaining < foldl1 max target || not (covers target $ nub $ concat allButtons)
-    then False
-  else
-    let limit = min remaining $ limitWithin target button in any pressAndSolve [limit, limit-1..0]
-    where
-      pressAndSolve times =
-        let newTarget = applyButton times button target in
-        if all ((==) 0) newTarget
-          then True
-          else solvable (remaining - times) newTarget (prioritize newTarget buttons)
+choose :: Int -> [a] -> [[a]]
+choose 0 _ = [[]]
+choose n [] = []
+choose n (x : xs) = ((x :) <$> choose (n - 1) xs) ++ choose n xs
 
-rangeSize target buttons button =
-  let
-    others = nub $ concat $ filter ((/=) button) buttons
-    upper = limitWithin target button
-    in if covers target others then 1 else upper
+solveBits :: [[Int]] -> Int -> Int -> [[[Int]]]
+solveBits buttons len target =
+  [option | n <- [0 .. length buttons], option <- choose n buttons, target == (foldl xor 0 $ fmap (buttonBits len) option)]
 
-prioritize target buttons =
-  sortBy (comparing $ rangeSize target buttons) buttons
-
-solve (target, buttons) =  ans
+solve buttons joltage = evalState (solve_ joltage) Map.empty
   where
-    solveIn i = solvable (traceShowId i) target  $ prioritize target buttons
-    Just ans = find solveIn [foldl1 max target..]
+    solve_ :: [Int] -> State (Map [Int] Int) Int
+    solve_ joltage = do
+      cached <- gets (Map.lookup joltage)
+      case cached of
+        Nothing -> do
+          ans <- compute joltage
+          modify $ insert joltage ans
+          return ans
+        Just answer -> return answer
+    compute :: [Int] -> State (Map [Int] Int) Int
+    compute joltage =
+      if all (== 0) joltage
+        then return 0
+        else
+          joltage
+            & fmap (\n -> n `mod` 2)
+            & foldl (\joltage bit -> bit .|. joltage `shift` 1) 0
+            & solveBits buttons (length joltage)
+            & fmap (\sol -> (foldl applyButton joltage sol, length sol))
+            & filter (\(remaining, _) -> all (>= 0) remaining)
+            & mapM
+              ( \(remaining, score) -> do
+                  sub <- solve_ (fmap (`div` 2) remaining)
+                  return $ sub * 2 + score
+              )
+            & fmap (foldl min 10000000)
 
-answer input = sum $ (traceShowId . solve . traceShowId) <$> machines
+answer input = sum $ fmap (\(j, b) -> solve b j) machines
   where
     Right machines = parse (machine `sepEndBy` char '\n') "" input
+
 main = getContents >>= print . answer

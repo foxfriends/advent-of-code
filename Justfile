@@ -31,7 +31,11 @@ _compile year day part:
         exit 0
     end
     cd {{year}}/{{day}}
-    if test -f {{part}}.erl
+    if test -f {{part}}.tri
+        trilogy compile {{part}}.tri > {{part}}.ll
+        {{clang}} -O3 {{part}}.ll -o {{part}}
+        rm {{part}}.ll
+    else if test -f {{part}}.erl
         erl -compile {{part}}.erl
     else if test -f {{part}}.swift
         swiftc {{part}}.swift > /dev/null
@@ -45,10 +49,6 @@ _compile year day part:
         ghc {{part}} -O -outputdir.{{part}} > /dev/null
     else if ls | rg "\.cabal\$" -q
         cabal build {{part}} > /dev/null
-    else if test -f {{part}}.tri
-        trilogy compile {{part}}.tri > {{part}}.ll
-        {{clang}} -O3 {{part}}.ll -o {{part}}
-        rm {{part}}.ll
     else if test -d {{part}} -a -f {{part}}/gleam.toml
         pushd {{part}}
         gleam build
