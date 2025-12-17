@@ -1,0 +1,17 @@
+import "trilogy:io" use readall
+import "trilogy:debug" use dbg
+import "trilogy:core" use length
+import "trilogy:parsec" as p use parse, per_line, many_1, digit
+import "trilogy:number" use from_digit
+import "trilogy:grid" as grid
+
+proc main!() {
+  let input = parse (per_line (many_1 <| p::map from_digit digit)) readall!()
+  let h = length input
+  let w = length <| input.0
+
+  let goal = grid::coord (w - 1) (h - 1)
+  let input_grid = grid::from input
+  let risk = grid::shortest_path_length!(input_grid, 0, goal)
+  dbg!(risk)
+}

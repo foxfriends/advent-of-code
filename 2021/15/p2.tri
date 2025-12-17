@@ -1,0 +1,38 @@
+import "trilogy:io" use readall
+import "trilogy:debug" use dbg
+import "trilogy:core" use length
+import "trilogy:parsec" as p use parse, per_line, many_1, digit
+import "trilogy:number" use from_digit
+import "trilogy:compare" use max
+import "trilogy:grid" as grid
+import "trilogy:array" as array
+import "trilogy:iterator" as it
+import "trilogy:algorithm" use shortest_path_length
+
+proc main!() {
+  let input = parse (per_line (many_1 <| p::map from_digit digit)) readall!()
+
+  let tile_h = length input
+  let tile_w = length <| input.0
+  let h = 5 * tile_h
+  let w = 5 * tile_w
+
+  let goal = grid::coord (w - 1) (h - 1)
+  let input_grid = grid::from input
+
+  let risk =  with shortest_path_length!(0, goal)
+    when 'neighbours(from_pos) resume
+      grid::adjacent from_pos
+      |> it::from
+      |> it::filter (fn p. grid::x p >= 0 && grid::y p >= 0 && grid::x p < w && grid::y p < h)
+      |> it::map (fn p.
+        let offset_weight = (grid::x p // tile_w) + (grid::y p // tile_h),
+        let mod_pos = grid::coord (grid::x p % tile_w) (grid::y p % tile_h),
+        let pos_weight = input_grid.mod_pos,
+        let total_weight = offset_weight + pos_weight,
+        p:if total_weight < 10 then total_weight else total_weight - 9
+      )
+      |> array::collect
+    else yield
+  dbg!(risk)
+}
