@@ -1,11 +1,12 @@
 import "trilogy:debug" use dbg
 import "trilogy:io" use readall
+import "trilogy:core" use length
 import "trilogy:parsec" use apply, parse, sep_by, string, integer
 import "trilogy:array" use collect
+import "trilogy:set" as set
 import "trilogy:iterator" as it
 import "trilogy:tuple" use right
 import "trilogy:number" use is_integer
-import "trilogy:compare" use max
 
 proc input!() {
   apply <| string "target area: x="
@@ -37,16 +38,16 @@ proc main!() {
     |> it::filter (it::any (in_range x_min x_max) << h_vel x_max 0)
     |> collect
 
-  let v_max = it::range y_min y_max
+  it::range y_min y_max
     |> it::flat_map (fn y.
       it::range 1 1_000 # time
       |> it::map (fn t. t:(y + (t * (t - 1) / 2)) / t) # t:y velocity to hit target
       |> it::filter (right >> is_integer) # integer velocities only
-      |> it::filter (fn _:v. v > 0) # also let's do upwards only
       |> it::flat_map (fn t:v. it::from h_candidates |> it::map (fn h. t:v:h))
       |> it::filter (fn t:v:h. in_range x_min x_max <| x_at t h)
-      |> it::map (fn _:v:_. v)
+      |> it::map (fn _:v:h. v:h)
     )
-    |> it::reduce max
-  dbg!(v_max * (v_max + 1) / 2)
+    |> set::collect
+    |> length
+    |> dbg
 }
