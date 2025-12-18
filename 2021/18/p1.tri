@@ -1,0 +1,68 @@
+import "trilogy:io" use readlines
+import "trilogy:debug" use dbg
+import "trilogy:parsec" use choice, apply, parse, integer, char
+import "trilogy:iterator" as it
+import "trilogy:number" use ceil, floor
+
+proc pair!() {
+  apply <| char '['
+  let lhs = apply <| snailfish_number
+  apply <| char ','
+  let rhs = apply <| snailfish_number
+  apply <| char ']'
+  return lhs:rhs
+}
+
+proc snailfish_number!() {
+  return apply <| choice [pair, integer]
+}
+
+func explode n = do_explode 0 n 'top
+
+func add_leftmost n l:r = add_leftmost n l : r
+func add_leftmost n m = n + m
+
+func add_rightmost n l:r = l : add_rightmost n r
+func add_rightmost n m = n + m
+
+func update_left n t 'top = yield 'exploded(t)
+func update_left n t 'l(ctx:rest) = update_left n (t:rest) ctx
+func update_left n t 'r(rest:ctx) = yield 'exploded(upmost ((add_rightmost n rest):t) ctx)
+
+func update_right n t 'top = yield 'exploded(t)
+func update_right n t 'l(ctx:rest) = yield 'exploded(upmost (t:(add_leftmost n rest)) ctx)
+func update_right n t 'r(rest:ctx) = update_right n (rest:t) ctx
+
+func upmost t 'top = t
+func upmost t 'l(ctx:rest) = upmost (t:rest) ctx
+func upmost t 'r(rest:ctx) = upmost (rest:t) ctx
+
+func do_explode _ (n and typeof 'number) _ = n
+func do_explode 4 (l:r) 'l(ctx:rest) = update_left l (0:add_leftmost r rest) ctx
+func do_explode 4 (l:r) 'r(rest:ctx) = update_right r (add_rightmost l rest:0) ctx
+func do_explode d (l:r) ctx = do_explode (d + 1) l 'l(ctx:r) : do_explode (d + 1) r 'r(l:ctx)
+
+func split n = do_split n 'top
+
+func do_split l:r ctx = do_split l 'l(ctx:r) : do_split r 'r(l:ctx)
+func do_split n ctx =
+  if n >= 10
+    then yield 'split(upmost (floor (n / 2):ceil (n / 2)) ctx)
+    else n
+
+func snailfish_reduce n =
+  with n |> explode |> split
+    when 'exploded(val) cancel snailfish_reduce val
+    when 'split(val) cancel snailfish_reduce val
+    else yield
+
+func magnitude l:r = 3 * magnitude l + 2 * magnitude r
+func magnitude n = n
+
+proc main!() {
+  readlines
+  |> it::map (parse snailfish_number)
+  |> it::reduce (fn l r. snailfish_reduce (l:r))
+  |> magnitude
+  |> dbg
+}
