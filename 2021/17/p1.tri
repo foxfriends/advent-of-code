@@ -1,0 +1,41 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readall
+import "trilogy:parsec" use apply, parse, sep_by, string, integer
+import "trilogy:array" use collect
+import "trilogy:iterator" as it
+import "trilogy:tuple" use left, right
+import "trilogy:number" use is_integer
+import "trilogy:compare" use max
+
+proc input!() {
+  apply <| string "target area: x="
+  let [x_min, x_max] = apply <| sep_by (string "..") integer
+  apply <| string ", y="
+  let [y_min, y_max] = apply <| sep_by (string "..") integer
+  return (x_min:x_max):(y_min:y_max)
+}
+
+func h_vel lim _ 0 = do() unit
+func h_vel lim pos vel = do() {
+  let next_pos = pos + vel
+  if next_pos > lim { return unit }
+  yield 'next(next_pos)
+  let rest = h_vel lim next_pos (vel - 1)
+  rest!()
+}
+
+func in_range low high n = low <= n && n <= high
+
+proc main!() {
+  let target and (x_min:x_max):(y_min:y_max) = parse input readall!()
+  it::range 1 x_max
+    |> it::flat_map (it::map ((+) 1 << left) << it::filter (in_range x_min x_max << right) << it::enumerate << h_vel x_max 0)
+    |> it::flat_map (fn t.
+      it::range y_min y_max
+      |> it::map (fn y. (y + (t * (t - 1) / 2)) / t)
+      |> it::filter is_integer
+      |> it::map dbg
+    )
+    |> it::reduce max
+    |> dbg
+}
