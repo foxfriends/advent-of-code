@@ -1,0 +1,15 @@
+import "trilogy:io" use readall
+import "trilogy:debug" use dbg
+import "trilogy:parsec" use apply, parse, string, integer, char, per_line, sep_by_1
+
+proc scanner!() {
+  apply <| string "--- scanner "
+  apply <| integer
+  apply <| string " ---\n"
+  return apply <| per_line (sep_by_1 (char ',') integer)
+}
+
+proc main!() {
+  let scanners = parse (per_line scanner) readall!()
+  dbg!(scanners)
+}
