@@ -13,7 +13,7 @@ func parse_range range = range
     |> map cast
     |> (fn [dest, src, len]. dest - src : src : src + len)
 
-const heading_regex = regex::new "(\\w+)-to-(\\w+) map:"
+slot heading_regex = regex::new "(\\w+)-to-(\\w+) map:"
 func parse_section [heading, ..ranges] =
     let {| 1 => from, 2 => to, .._ |} = heading_regex::matches heading,
     let parsed_ranges = map parse_range ranges,

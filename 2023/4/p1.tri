@@ -6,7 +6,7 @@ module iter at "trilogy:iter" use map, reduce, filter
 module set at "trilogy:set" use intersection, length
 module array at "trilogy:array"
 
-const card_regex = regex::new "Card\\s+\\d+:([^|]+)\\|([^|]+)"
+slot card_regex = regex::new "Card\\s+\\d+:([^|]+)\\|([^|]+)"
 
 func parse_nums numstr = [| num::cast x for x in numstr |> split " " and is x != "" |]
 func parse_card card = parse_nums card.1 : parse_nums card.2

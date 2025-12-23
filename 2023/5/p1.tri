@@ -6,7 +6,7 @@ module regex at "trilogy:regex"
 module record at "trilogy:record"
 module iter at "trilogy:iter" use collect, of
 
-const heading_regex = regex::new "(\\w+)-to-(\\w+) map:"
+slot heading_regex = regex::new "(\\w+)-to-(\\w+) map:"
 func parse_section [heading, ..ranges] =
     let {| 1 => from, 2 => to, .._ |} = heading_regex::matches heading,
     let parsed_ranges = map (str::split " " >> map cast) ranges,

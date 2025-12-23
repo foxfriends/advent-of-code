@@ -6,15 +6,15 @@ module str at "trilogy:str" use joined, take, skip
 module array at "trilogy:array" use fold, map, flatmap, length, filter, sort, position
 module iter at "trilogy:iter" use repeat, collect, range, rangex, of
 
-const line_regex = regex::new "([LRUD]) (\\d+) \\(#([a-f0-9]{6})\\)"
+slot line_regex = regex::new "([LRUD]) (\\d+) \\(#([a-f0-9]{6})\\)"
 
 func scan f i [] = [i]
 func scan f i [x, ..xs] = let a = f i x, [a, ..scan f a xs]
 
-const L = -1
-const R = 1
-const U = -0i1
-const D = 0i1
+slot L = -1
+slot R = 1
+slot U = -1i
+slot D = 1i
 
 func delta "L" = L
 func delta "R" = R
@@ -44,7 +44,7 @@ func has x b = (x & b) == b
 
 proc main!() {
     let instructions = [parse c for line in readlines!() and {| 3 => c, .._ |} = line_regex::matches line]
-    let coords = scan move 0i0 instructions
+    let coords = scan move 0 instructions
     let xs = sort (<=) [x for x in [| re coord for coord in coords |]]
     let ys = sort (<=) [y for y in [| im coord for coord in coords |]]
 

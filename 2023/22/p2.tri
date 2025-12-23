@@ -7,7 +7,7 @@ module set at "trilogy:set" use length, insert, subtract, union
 module regex at "trilogy:regex"
 module iter at "trilogy:iter" use range
 
-const line_regex = regex::new "(\\d+),(\\d+),(\\d+)~(\\d+),(\\d+),(\\d+)"
+slot line_regex = regex::new "(\\d+),(\\d+),(\\d+)~(\\d+),(\\d+),(\\d+)"
 func parse str =
     let matches = line_regex::matches str,
     normalize (cast (matches.1):cast (matches.2):cast (matches.3)) (cast (matches.4):cast (matches.5):cast (matches.6))

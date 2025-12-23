@@ -7,8 +7,8 @@ module num at "trilogy:num"
 module regex at "trilogy:regex"
 module tuple at "trilogy:tuple" use fst
 
-const gear_regex = regex::new "[*]"
-const number_regex = regex::new "\\d+"
+slot gear_regex = regex::new "[*]"
+slot number_regex = regex::new "\\d+"
 
 func gears str = gear_regex::all_positions str |> map (get 0 >> fst)
 func numbers str = number_regex::all_captures str |> map (get 0)

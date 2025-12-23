@@ -90,7 +90,7 @@ proc spin!(grid) {
 
 func key grid = fold (fn a b. $"${a}${str::cast b}") "" <| do() $(ch for line in grid and (ch in line or ch = '\n'))
 
-const target = 1000000000
+slot target = 1000000000
 
 proc main!() {
     let mut total = 0

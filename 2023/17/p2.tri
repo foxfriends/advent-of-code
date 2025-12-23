@@ -6,12 +6,12 @@ module tuple at "trilogy:tuple" use fst, snd
 module btreemod at "trilogy:btree" use btree
 module iter at "trilogy:iter" use range
 
-const N = -0i1
-const S = 0i1
-const E = 1i0
-const W = -1i0
+slot N = -1i
+slot S = 1i
+slot E = 1
+slot W = -1
 
-func turn dir = [-0i1 * dir, -(-0i1 * dir)]
+func turn dir = [-1i * dir, -(-1i * dir)]
 func key ^N = 'v
 func key ^S = 'v
 func key ^E = 'h
@@ -25,7 +25,7 @@ func insert cmp val x:xs = if cmp val x then val:x:xs else x:insert cmp val xs
 
 proc main!() {
     let grid = [[cast $"${n}"fmt for n in chars <| chomp line] for line in readlines!()]
-    let best = {| 0i0 => {| 'h => 0, 'v => 0 |} |}
+    let best = {| 0 => {| 'h => 0, 'v => 0 |} |}
 
     let goal = (length grid * S + length (grid.0) * E) + N + W
 
@@ -34,7 +34,7 @@ proc main!() {
 
     let ltree = btree (asc score)
 
-    let mut queue = ltree::from [0i0:E, 0i0:S]
+    let mut queue = ltree::from [0:E, 0:S]
     while queue != 'empty {
         let (pos:face):q2 = ltree::pop_min queue
         queue = q2

@@ -5,8 +5,8 @@ module str at "trilogy:str" use chomp, split
 module range at "trilogy:range" use overlap, length, new
 module regex at "trilogy:regex"
 
-const workflow_regex = regex::new "(?<name>\\w+)\\{(?<steps>.*)\\}"
-const step_regex = regex::new "(?<comp>[xmas])(?<op>[<>])(?<val>\\d+)"
+slot workflow_regex = regex::new "(?<name>\\w+)\\{(?<steps>.*)\\}"
+slot step_regex = regex::new "(?<comp>[xmas])(?<op>[<>])(?<val>\\d+)"
 
 func comp_total comp = length comp
 func part_total {| "x" => x, "m" => m, "a" => a, "s" => s |} = comp_total x * comp_total m * comp_total a * comp_total s

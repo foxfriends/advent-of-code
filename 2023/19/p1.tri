@@ -4,8 +4,8 @@ module num at "trilogy:num" use cast
 module str at "trilogy:str" use chomp, split
 module regex at "trilogy:regex"
 
-const workflow_regex = regex::new "(?<name>\\w+)\\{(?<steps>.*)\\}"
-const step_regex = regex::new "(?<comp>[xmas])(?<op>[<>])(?<val>\\d+)"
+slot workflow_regex = regex::new "(?<name>\\w+)\\{(?<steps>.*)\\}"
+slot step_regex = regex::new "(?<comp>[xmas])(?<op>[<>])(?<val>\\d+)"
 
 func always x _ = x
 

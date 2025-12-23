@@ -25,7 +25,7 @@ module broadcaster destinations {
 }
 
 module flipflop destinations {
-    const state = {| 'on => false |}
+    slot state = {| 'on => false |}
 
     proc add_input!(_) {}
 
@@ -57,7 +57,7 @@ module flipflop destinations {
 }
 
 module conjunction destinations {
-    const state = {||}
+    slot state = {||}
 
     proc add_input!(input) {
         state.input = 'low
@@ -93,7 +93,7 @@ module conjunction destinations {
     export add_input, init, signal
 }
 
-const important = ["mp", "qt", "qb", "ng"]
+slot important = ["mp", "qt", "qb", "ng"]
 
 func parse_node srcdest = let [name, dests] = split " -> " srcdest, name : split ", " dests
 

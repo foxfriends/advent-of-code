@@ -4,7 +4,7 @@ module str at "trilogy:str" use split
 module array at "trilogy:array" use map, flatmap, fold
 module regex at "trilogy:regex"
 
-const init = {|
+slot init = {|
     "red" => 0,
     "green" => 0,
     "blue" => 0,

@@ -29,7 +29,7 @@ proc main!() {
     readlines
     |> it::map (it::enumerate << it::from << chomp)
     |> it::enumerate
-    |> it::flat_map (fn y:inner. it::map (fn x:v. x + y * 0i1 : v) inner)
+    |> it::flat_map (fn y:inner. it::map (fn x:v. x + y * 1i : v) inner)
   )
   let max_y = reduce max <| [im pos for pos in splitters]
   let mut splits = 0
@@ -38,7 +38,7 @@ proc main!() {
   while i <= max_y {
     beams = beams
       |> it::from
-      |> it::flat_map (fn beam:val. if contains beam splitters then it::from [beam + 1i1: val, beam - 1 + 0i1: val] else it::of (beam + 0i1:val))
+      |> it::flat_map (fn beam:val. if contains beam splitters then it::from [beam + 1 + 1i: val, beam - 1 + 1i: val] else it::of (beam + 1i:val))
       |> it::fold (fn rec pos:val. {| ..rec, pos => val + with rec.pos when 'mia cancel 0 else yield |}) {||}
     i += 1
   }

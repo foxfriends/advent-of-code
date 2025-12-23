@@ -5,10 +5,10 @@ module num at "trilogy:num" use im, re, is_even, is_odd, min
 module record at "trilogy:record" use values
 module iter at "trilogy:iter" use count, filter, rangex
 
-const N = -0i1
-const S = 0i1
-const E = 1
-const W = -1
+slot N = -1i
+slot S = 1i
+slot E = 1
+slot W = -1
 
 func get pos grid = with grid.(im pos).(re pos) else cancel '#'
 func adj pos = $(d + pos for d in [N, S, E, W])

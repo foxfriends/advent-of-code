@@ -6,10 +6,10 @@ module set at "trilogy:set" use contains, length, insert
 module record at "trilogy:record"
 module tuple at "trilogy:tuple" use fst
 
-const N = -0i1
-const S = 0i1
-const E = 1
-const W = -1
+slot N = -1i
+slot S = 1i
+slot E = 1
+slot W = -1
 
 func walkable '#' = false
 func walkable  _  = true
