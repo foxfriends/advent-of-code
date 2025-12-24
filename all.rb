@@ -58,14 +58,22 @@ module Haskell
     end
 
     def self.implemented? part
-        File.exist? "p#{part}.hs"
+        File.exist? "p#{part}.hs" or File.exist? "solution.cabal"
     end
 
     def self.run part
-        `ghc p#{part}.hs 2> /dev/null`
-        return :ghc_error unless $?.success?
-        report "p#{part}.hs" do
-            `timeout 1m ./p#{part} < input`
+        if File.exist? "solution.cabal"
+            `cabal build p#{part}`
+            return :cabal_error unless $?.success?
+            report "solution.cabal (p#{part})" do
+                `timeout 1m cabal run p#{part} < input`
+            end
+        else
+            `ghc p#{part}.hs 2> /dev/null`
+            return :ghc_error unless $?.success?
+            report "p#{part}.hs" do
+                `timeout 1m ./p#{part} < input`
+            end
         end
     end
 end
@@ -161,7 +169,7 @@ module Python
         return "python" if which "python"
         return nil
     end
-    
+
     def self.available?
         self.python != nil
     end
@@ -209,7 +217,94 @@ module TypeScript
     end
 end
 
-languages = [Haskell, Rust, Trilogy, C, Cpp, Swift, Python, Ruby, TypeScript]
+module Erlang
+    def self.available?
+        which "erl" != nil
+    end
+
+    def self.implemented? part
+        File.exist? "p#{part}.erl"
+    end
+
+    def self.run part
+        `erl -compile p#{part}.erl`
+        return :erl_error unless $?.success?
+        report "p#{part}.erl" do
+            `timeout 1m erl -noshell -s p#{part} main -s init stop < input`
+        end
+    end
+end
+
+module Elixir
+    def self.available?
+        which "elixir" != nil
+    end
+
+    def self.implemented? part
+        File.exist? "p#{part}.ex"
+    end
+
+    def self.run part
+        report "p#{part}.ex" do
+            `timeout 1m elixir p#{part}.ex < input`
+        end
+    end
+end
+
+module Gleam
+    def self.available?
+        which "gleam" != nil
+    end
+
+    def self.implemented? part
+        File.exist? "p#{part}/gleam.toml"
+    end
+
+    def self.run part
+        pwd = Dir.pwd
+        Dir.chdir "p#{part}"
+        `gleam build --no-print-progress`
+        return :gleam_error unless $?.success?
+        report "p#{part}.gleam" do
+            `timeout 1m gleam run --no-print-progress < ../input`
+        end
+        Dir.chdir pwd
+    end
+end
+
+module Prolog
+    def self.available?
+        which "swipl" != nil
+    end
+
+    def self.implemented? part
+        File.exist? "p#{part}.pl"
+    end
+
+    def self.run part
+        report "p#{part}.pl" do
+            `timeout 1m swipl -s p#{part}.pl -g main,halt < input`
+        end
+    end
+end
+
+module Php
+    def self.available?
+        which "php" != nil
+    end
+
+    def self.implemented? part
+        File.exist? "p#{part}.php"
+    end
+
+    def self.run part
+        report "p#{part}.php" do
+            `timeout 1m php p#{part}.php < input`
+        end
+    end
+end
+
+languages = [Haskell, Rust, Trilogy, C, Cpp, Swift, Python, Ruby, TypeScript, Erlang, Elixir, Gleam, Prolog, Php]
     .filter { |lang| lang.available? }
 
 root = Dir.pwd
