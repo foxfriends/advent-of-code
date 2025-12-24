@@ -21,7 +21,7 @@ proc tree!() {
   let h = apply integer
   apply <| string ": "
   let req = apply <| sep_by (char ' ') integer
-  return dbg!(w:h:req)
+  return w:h:req
 }
 
 func id x = x
