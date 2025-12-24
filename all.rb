@@ -303,7 +303,7 @@ module Perl
 
     def self.run part
         report "p#{part}.pl" do
-            `timeout 1m perl p#{part} < input`
+            `timeout 1m perl p#{part}.pl < input`
         end
     end
 end
