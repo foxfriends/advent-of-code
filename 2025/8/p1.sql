@@ -1,3 +1,9 @@
+\set QUIET TRUE
+\t
+\a
+
+SET client_min_messages TO WARNING;
+
 DROP DATABASE IF EXISTS year_2025_day_8;
 CREATE DATABASE year_2025_day_8;
 \c year_2025_day_8

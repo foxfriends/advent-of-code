@@ -27,11 +27,11 @@ fn signum(n: i32) i32 {
 }
 
 fn simulate(grid: *[H][W]bool, position: Point) void {
-    if (grid[@intCast(usize, position.y)][@intCast(usize, position.x)]) return;
+    if (grid[@intCast(position.y)][@intCast(position.x)]) return;
     simulate(grid, position.below());
     simulate(grid, position.belowLeft());
     simulate(grid, position.belowRight());
-    grid[@intCast(usize, position.y)][@intCast(usize, position.x)] = true;
+    grid[@intCast(position.y)][@intCast(position.x)] = true;
 }
 
 fn countFilled(grid: [H][W]bool) usize {
@@ -45,38 +45,40 @@ fn countFilled(grid: [H][W]bool) usize {
 }
 
 pub fn main() !void {
-    const stdout = std.io.getStdOut().writer();
-    var lines = std.mem.split(u8, input, "\n");
+    var buffer: [256]u8 = undefined;
+    var stdout_writer = std.fs.File.stdout().writer(&buffer);
+    const stdout = &stdout_writer.interface;
+    var lines = std.mem.splitSequence(u8, input, "\n");
 
-    var grid: [H][W]bool = .{};
+    var grid: [H][W]bool = .{.{false} ** W} ** H;
     var maxY: usize = 0;
 
     while (lines.next()) |line| {
         if (line.len == 0) break;
-        var points = std.mem.split(u8, line, " -> ");
+        var points = std.mem.splitSequence(u8, line, " -> ");
         var prev: ?Point = null;
         while (points.next()) |pointstr| {
-            var coords = std.mem.split(u8, pointstr, ",");
+            var coords = std.mem.splitSequence(u8, pointstr, ",");
             const point = Point {
                 .x = try std.fmt.parseInt(i32, coords.next().?, 10) - O,
                 .y = try std.fmt.parseInt(i32, coords.next().?, 10),
             };
             if (prev == null) {
                 prev = point;
-                grid[@intCast(usize, prev.?.y)][@intCast(usize, prev.?.x)] = true;
+                grid[@intCast(prev.?.y)][@intCast(prev.?.x)] = true;
             }
-            maxY = std.math.max(maxY, @intCast(usize, point.y));
+            maxY = @max(maxY, @as(usize, @intCast(point.y)));
             const dx = signum(point.x - prev.?.x);
             const dy = signum(point.y - prev.?.y);
             while (!std.meta.eql(prev, point)) {
                 prev.?.x += dx;
                 prev.?.y += dy;
-                grid[@intCast(usize, prev.?.y)][@intCast(usize, prev.?.x)] = true;
+                grid[@intCast(prev.?.y)][@intCast(prev.?.x)] = true;
             }
         }
     }
 
-    for ([_]u0{0} ** W) |_, i| {
+    for ([_]u0{0} ** W, 0..) |_, i| {
         grid[maxY + 2][i] = true;
     }
 
@@ -84,4 +86,5 @@ pub fn main() !void {
     simulate(&grid, INPUT);
     const sand = countFilled(grid) - blocks;
     try stdout.print("{d}\n", .{sand});
+    try stdout.flush();
 }

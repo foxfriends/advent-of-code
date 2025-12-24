@@ -21,7 +21,7 @@ class Monkey(
     }
 }
 
-object Monkey {
+object P1 {
     def main(args: Array[String]) = {
         val monkeys = List(
             Monkey(Array(84, 72, 58, 51)                , _ * 3     , 13, 1, 7),

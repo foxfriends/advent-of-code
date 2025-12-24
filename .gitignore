@@ -15,3 +15,8 @@ p2
 .p2
 dist-newstyle
 report.json
+META-INF
+*.class
+*.tasty
+.bsp
+.scala-build

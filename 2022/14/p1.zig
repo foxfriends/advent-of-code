@@ -27,11 +27,11 @@ fn signum(n: i32) i32 {
 
 fn simulate(grid: *[H][W]bool, position: Point) !void {
     if (position.y == H) return error.SimulationDone;
-    if (grid[@intCast(usize, position.y)][@intCast(usize, position.x)]) return;
+    if (grid[@intCast(position.y)][@intCast(position.x)]) return;
     try simulate(grid, position.below());
     try simulate(grid, position.belowLeft());
     try simulate(grid, position.belowRight());
-    grid[@intCast(usize, position.y)][@intCast(usize, position.x)] = true;
+    grid[@intCast(position.y)][@intCast(position.x)] = true;
 }
 
 fn countFilled(grid: [H][W]bool) usize {
@@ -45,31 +45,33 @@ fn countFilled(grid: [H][W]bool) usize {
 }
 
 pub fn main() !void {
-    const stdout = std.io.getStdOut().writer();
-    var lines = std.mem.split(u8, input, "\n");
+    var buffer: [256]u8 = undefined;
+    var stdout_writer = std.fs.File.stdout().writer(&buffer);
+    const stdout = &stdout_writer.interface;
+    var lines = std.mem.splitSequence(u8, input, "\n");
 
-    var grid: [H][W]bool = .{};
+    var grid: [H][W]bool = .{.{false} ** W} ** H;
 
     while (lines.next()) |line| {
         if (line.len == 0) break;
-        var points = std.mem.split(u8, line, " -> ");
+        var points = std.mem.splitSequence(u8, line, " -> ");
         var prev: ?Point = null;
         while (points.next()) |pointstr| {
-            var coords = std.mem.split(u8, pointstr, ",");
+            var coords = std.mem.splitSequence(u8, pointstr, ",");
             const point = Point {
                 .x = try std.fmt.parseInt(i32, coords.next().?, 10),
                 .y = try std.fmt.parseInt(i32, coords.next().?, 10),
             };
             if (prev == null) {
                 prev = point;
-                grid[@intCast(usize, prev.?.y)][@intCast(usize, prev.?.x)] = true;
+                grid[@intCast(prev.?.y)][@intCast(prev.?.x)] = true;
             }
             const dx = signum(point.x - prev.?.x);
             const dy = signum(point.y - prev.?.y);
             while (!std.meta.eql(prev, point)) {
                 prev.?.x += dx;
                 prev.?.y += dy;
-                grid[@intCast(usize, prev.?.y)][@intCast(usize, prev.?.x)] = true;
+                grid[@intCast(prev.?.y)][@intCast(prev.?.x)] = true;
             }
         }
     }
@@ -78,4 +80,5 @@ pub fn main() !void {
     _ = simulate(&grid, INPUT) catch null;
     const sand = countFilled(grid) - blocks;
     try stdout.print("{d}\n", .{sand});
+    try stdout.flush();
 }

@@ -1,6 +1,6 @@
 /**
  * Alright, a bit unorthodox of a solution
- * Run this as `psql -d <somedb> -q < p1.sql`
+ * Run this as `psql -f p1.sql`
  * and you will get the answer printed, like
  * normal. While this does not mind being run
  * on an already populated database, it does
@@ -8,9 +8,15 @@
  * system state modified.
  */
 
+\set QUIET TRUE
 \t
+\a
 
 SET client_min_messages TO WARNING;
+
+DROP DATABASE IF EXISTS p1;
+CREATE DATABASE p1;
+\c p1
 
 CREATE TABLE IF NOT EXISTS points (
     x INT NOT NULL,

@@ -1,6 +1,12 @@
+\set QUIET TRUE
 \t
+\a
 
 SET client_min_messages TO WARNING;
+
+DROP DATABASE IF EXISTS p1;
+CREATE DATABASE p1;
+\c p1
 
 CREATE TABLE IF NOT EXISTS points (
     x INT NOT NULL,

@@ -63,7 +63,7 @@ module Haskell
 
   def self.run(part)
     if File.exist? "solution.cabal"
-      `cabal build p#{part}`
+      `cabal build p#{part} 2> /dev/null`
       return :cabal_error unless $?.success?
       report "solution.cabal (p#{part})" do
         `timeout 1m cabal run p#{part} < input`
@@ -356,7 +356,147 @@ module Fish
   end
 end
 
-languages = [Haskell, Rust, Trilogy, C, Cpp, Swift, Python, Ruby, TypeScript, Erlang, Elixir, Gleam, Prolog, Php, Perl, Bash, Fish]
+module Go
+  def self.available?
+    which "go"
+  end
+
+  def self.implemented?(part)
+    File.exist? "p#{part}.go"
+  end
+
+  def self.run(part)
+    `go build p#{part}.go`
+    return :go_error unless $?.success?
+    report "p#{part}.go" do
+      `timeout 1m ./p#{part} < input`
+    end
+  end
+end
+
+module Sql
+  def self.available?
+    which "psql" and `pg_isready -d postgres -U postgres -h localhost`
+  end
+
+  def self.implemented?(part)
+    File.exist? "p#{part}.sql"
+  end
+
+  def self.run(part)
+    report "p#{part}.sql" do
+      `timeout 1m psql -h localhost -U postgres -d postgres -f ./p#{part}.sql`
+    end
+  end
+end
+
+module Clojure
+  def self.available?
+    which "clojure"
+  end
+
+  def self.implemented?(part)
+    File.exist? "p#{part}.clj"
+  end
+
+  def self.run(part)
+    report "p#{part}.clj" do
+      `timeout 1m clojure -M ./p#{part}.clj < input`
+    end
+  end
+end
+
+module Kotlin
+  def self.available?
+    which "kotlinc"
+  end
+
+  def self.implemented?(part)
+    File.exist? "p#{part}.kt"
+  end
+
+  def self.run(part)
+    `kotlinc p#{part}.kt`
+    return :kotlinc_error unless $?.success?
+    report "p#{part}.kt" do
+      `timeout 1m kotlin ./P#{part}kt.class < input`
+    end
+  end
+end
+
+module Scala
+  def self.available?
+    which "scala"
+  end
+
+  def self.implemented?(part)
+    File.exist? "p#{part}.scala"
+  end
+
+  def self.run(part)
+    `scala compile p#{part}.scala`
+    return :scala_error unless $?.success?
+    report "p#{part}.scala" do
+      `timeout 1m scala -M P#{part} p#{part}.scala < input`
+    end
+  end
+end
+
+module Crystal
+  def self.available?
+    which "crystal"
+  end
+
+  def self.implemented?(part)
+    File.exist? "p#{part}.cr"
+  end
+
+  def self.run(part)
+    `crystal build p#{part}.cr`
+    return :crystal_error unless $?.success?
+    report "p#{part}.cr" do
+      `timeout 1m ./p#{part} < input`
+    end
+  end
+end
+
+module Nim
+  def self.available?
+    which "nim"
+  end
+
+  def self.implemented?(part)
+    File.exist? "p#{part}.nim"
+  end
+
+  def self.run(part)
+    `nim compile p#{part}.nim`
+    return :nim_error unless $?.success?
+    report "p#{part}.nim" do
+      `timeout 1m ./p#{part} < input`
+    end
+  end
+end
+
+module Zig
+  def self.available?
+    which "zig"
+  end
+
+  def self.implemented?(part)
+    File.exist? "p#{part}.zig"
+  end
+
+  def self.run(part)
+    `zig build-exe p#{part}.zig`
+    return :zig_error unless $?.success?
+    report "p#{part}.zig" do
+      `timeout 1m ./p#{part} < input`
+    end
+  end
+end
+
+languages = [Haskell, Rust, Trilogy, C, Cpp, Swift, Python, Ruby, TypeScript, Erlang, Elixir, Gleam, Prolog, Php, Perl, Bash, Fish, Go, Sql, Clojure, Kotlin, Scala, Crystal]
   .filter { |lang| lang.available? }
 
 root = Dir.pwd
