@@ -470,7 +470,7 @@ module Nim
   end
 
   def self.run(part)
-    `nim compile p#{part}.nim`
+    `nim compile -d:release p#{part}.nim 2> /dev/null`
     return :nim_error unless $?.success?
     report "p#{part}.nim" do
       `timeout 1m ./p#{part} < input`
