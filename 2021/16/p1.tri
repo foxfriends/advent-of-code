@@ -34,9 +34,10 @@ proc operator!() {
 proc packet!() {
   let version = from_binary <| apply <| repeat 3 any
   let type_id = from_binary <| apply <| repeat 3 any
-  let val = match type_id
+  let val = match type_id {
     case 4 then apply literal
-    else then apply operator
+    else apply operator
+  }
   return version + val
 }
 

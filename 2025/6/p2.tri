@@ -11,9 +11,10 @@ proc row!() {
   apply <| many <| char ' '
   let n = apply integer
   apply <| many <| char ' '
-  return match apply <| option <| char_of "+*"
+  return match apply <| option <| char_of "+*" {
     case 'some(ch) then [n, ch]
-    else then [n]
+    else [n]
+  }
 }
 
 proc blank!() {
