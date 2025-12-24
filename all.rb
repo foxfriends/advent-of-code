@@ -278,12 +278,32 @@ module Prolog
     end
 
     def self.implemented? part
-        File.exist? "p#{part}.pl"
+        return false unless File.exist? "p#{part}.pl"
+        first_line = File.open "p#{part}.pl", &:gets
+        not first_line.include?("perl")
     end
 
     def self.run part
         report "p#{part}.pl" do
             `timeout 1m swipl -s p#{part}.pl -g main,halt < input`
+        end
+    end
+end
+
+module Perl
+    def self.available?
+        which "perl" != nil
+    end
+
+    def self.implemented? part
+        return false unless File.exist? "p#{part}.pl"
+        first_line = File.open "p#{part}.pl", &:gets
+        first_line.include?("perl")
+    end
+
+    def self.run part
+        report "p#{part}.pl" do
+            `timeout 1m perl p#{part} < input`
         end
     end
 end
@@ -304,7 +324,7 @@ module Php
     end
 end
 
-languages = [Haskell, Rust, Trilogy, C, Cpp, Swift, Python, Ruby, TypeScript, Erlang, Elixir, Gleam, Prolog, Php]
+languages = [Haskell, Rust, Trilogy, C, Cpp, Swift, Python, Ruby, TypeScript, Erlang, Elixir, Gleam, Prolog, Php, Perl]
     .filter { |lang| lang.available? }
 
 root = Dir.pwd
