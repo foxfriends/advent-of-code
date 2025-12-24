@@ -419,7 +419,7 @@ module Kotlin
     `kotlinc p#{part}.kt`
     return :kotlinc_error unless $?.success?
     report "p#{part}.kt" do
-      `timeout 1m kotlin ./P#{part}kt.class < input`
+      `timeout 1m kotlin ./P#{part}Kt.class < input`
     end
   end
 end
@@ -434,10 +434,10 @@ module Scala
   end
 
   def self.run(part)
-    `scala compile p#{part}.scala`
+    `scala compile p#{part}.scala 2> /dev/null`
     return :scala_error unless $?.success?
     report "p#{part}.scala" do
-      `timeout 1m scala -M P#{part} p#{part}.scala < input`
+      `timeout 1m scala -M P#{part} p#{part}.scala < input 2> /dev/null`
     end
   end
 end
@@ -496,7 +496,7 @@ module Zig
   end
 end
 
-languages = [Haskell, Rust, Trilogy, C, Cpp, Swift, Python, Ruby, TypeScript, Erlang, Elixir, Gleam, Prolog, Php, Perl, Bash, Fish, Go, Sql, Clojure, Kotlin, Scala, Crystal]
+languages = [Haskell, Rust, Trilogy, C, Cpp, Swift, Python, Ruby, TypeScript, Erlang, Elixir, Gleam, Prolog, Php, Perl, Bash, Fish, Go, Sql, Clojure, Kotlin, Scala, Crystal, Nim, Zig]
   .filter { |lang| lang.available? }
 
 root = Dir.pwd

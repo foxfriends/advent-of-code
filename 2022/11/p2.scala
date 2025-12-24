@@ -7,7 +7,7 @@ class Monkey(
 ) {
     var inspected: Long = 0
 
-    def receive(item: Long) = {
+    infix def receive(item: Long) = {
         items = items :+ item
     }
 
