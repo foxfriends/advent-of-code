@@ -1,35 +1,40 @@
-module io at "trilogy:io" use readlines, println
-module num at "trilogy:num" use cast, max
-module str at "trilogy:str" use split
-module array at "trilogy:array" use map, flatmap, fold
-module regex at "trilogy:regex"
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:compare" use max
+import "trilogy:array" use fold, flatten
+import "trilogy:iterator" as it
+import "trilogy:parsec" use parse, apply, string, integer, char, sep_by_1, prefixed_by, choice
 
-slot init = {|
-    "red" => 0,
-    "green" => 0,
-    "blue" => 0,
-|}
+slot init = {| "red" => 0, "green" => 0, "blue" => 0 |}
 
-func max_color {| "red" => best, ..cs |} {| 2 => "red", 1 => n, .._ |} = {| "red" => max (cast n) best, ..cs |}
-func max_color {| "green" => best, ..cs |} {| 2 => "green", 1 => n, .._ |} = {| "green" => max (cast n) best, ..cs |}
-func max_color {| "blue" => best, ..cs |} {| 2 => "blue", 1 => n, .._ |} = {| "blue" => max (cast n) best, ..cs |}
+func max_color {| "red" => best, ..cs |} n:"red" = {| "red" => max n best, ..cs |}
+func max_color {| "green" => best, ..cs |} n:"green" = {| "green" => max n best, ..cs |}
+func max_color {| "blue" => best, ..cs |} n:"blue" = {| "blue" => max n best, ..cs |}
 
 func power {| "red" => r, "green" => g, "blue" => b |} = r * g * b
 
+proc draw!() {
+  let count = apply integer
+  apply <| char ' '
+  let color = apply <| choice [string "red", string "blue", string "green"]
+  return count:color
+}
+
+proc game!() {
+  apply <| string "Game "
+  apply integer
+  apply <| string ": "
+  return apply
+    <| sep_by_1 (string "; ")
+    <| sep_by_1 (string ", ")
+    <| draw
+}
+
 proc main!() {
-    let game_pattern = regex::new "Game (\\d+): (.*)"
-    let draw_pattern = regex::new "(\\d+) (green|red|blue)"
-    let mut total = 0
-    for line in readlines!() {
-        let game = game_pattern::matches line
-        total += game.2
-            |> split "; "
-            |> flatmap (
-                split ", "
-                >> map (draw_pattern::matches)
-            )
-            |> fold max_color {| ..init |}
-            |> power
-    }
-    println!(total)
+    readlines
+    |> it::map <| parse game
+    |> it::map <| fold max_color init << flatten
+    |> it::map power
+    |> it::reduce (+)
+    |> dbg
 }

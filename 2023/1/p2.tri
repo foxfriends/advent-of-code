@@ -1,6 +1,6 @@
 import "trilogy:io" use readlines
 import "trilogy:debug" use dbg
-import "trilogy:iterator" use map, foldl
+import "trilogy:iterator" use map, fold
 import "trilogy:string" use skip
 import "trilogy:parsec" use parse, integer
 
@@ -9,9 +9,10 @@ func combine [a, .._, b] = "${a}${b}"
 
 func digits "" = []
 func digits s =
-    match extract s
+    match extract s {
         case 'some(d) then [d, ..digits (skip 1 s)]
-        else _ then digits (skip 1 s)
+        else digits (skip 1 s)
+    }
 
 func extract "0" <> _ = 'some(0)
 func extract ("1" <> _) or ("one" <> _) = 'some(1)
@@ -30,6 +31,6 @@ proc main!() {
         |> map digits
         |> map combine
         |> map (parse integer)
-        |> foldl (+) 0
+        |> fold (+) 0
     dbg!(total)
 }
