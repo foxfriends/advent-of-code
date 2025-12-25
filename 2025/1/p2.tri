@@ -21,11 +21,11 @@ proc main!() {
   let mut answer = 0
   with readlines
     |> it::map (parse rotation)
-    |> it::fold rotate 50
+    |> it::fold rotate 50 {
     when 'rotations(n) then {
       answer += n
       become unit
     }
-    else yield
+  }
   dbg!(answer)
 }

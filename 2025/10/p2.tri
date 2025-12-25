@@ -65,7 +65,7 @@ proc solver!(buttons) {
       |> solve_bits buttons
       |> it::map (fn sol. fold apply_button joltage sol : length sol)
       |> it::filter (fn remaining:_. all (fn n. n >= 0) remaining)
-      |> it::flat_map (fn remaining:score. with it::of <| solve!(map (fn n. n // 2) remaining) * 2 + score when 'mia cancel (do() {}) else yield)
+      |> it::flat_map (fn remaining:score. with it::of <| solve!(map (fn n. n // 2) remaining) * 2 + score { when 'mia cancel (do() {}) })
       |> it::reduce min
     cache.(to_tuple joltage) = best
     return best

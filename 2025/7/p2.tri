@@ -10,7 +10,7 @@ import "trilogy:iterator" as it
 proc collect_input!(it) {
   let mut start = unit
   let mut splitters = [||]
-  with it!()
+  with it!() {
     when 'next(pos:'S') then {
       start = pos
       become unit
@@ -20,7 +20,7 @@ proc collect_input!(it) {
       become unit
     }
     when 'next(_) resume unit
-    else yield
+  }
   return start:splitters
 }
 
@@ -39,7 +39,7 @@ proc main!() {
     beams = beams
       |> it::from
       |> it::flat_map (fn beam:val. if contains beam splitters then it::from [beam + 1 + 1i: val, beam - 1 + 1i: val] else it::of (beam + 1i:val))
-      |> it::fold (fn rec pos:val. {| ..rec, pos => val + with rec.pos when 'mia cancel 0 else yield |}) {||}
+      |> it::fold (fn rec pos:val. {| ..rec, pos => val + with rec.pos { when 'mia cancel 0 } |}) {||}
     i += 1
   }
   dbg!(reduce (+) [val for _:val in beams])

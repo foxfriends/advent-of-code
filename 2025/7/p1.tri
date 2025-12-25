@@ -10,7 +10,7 @@ import "trilogy:iterator" as it
 proc collect_input!(it) {
   let mut start = unit
   let mut splitters = [||]
-  with it!()
+  with it!() {
     when 'next(pos:'S') then {
       start = pos
       become unit
@@ -20,7 +20,7 @@ proc collect_input!(it) {
       become unit
     }
     when 'next(_) resume unit
-    else yield
+  }
   return start:splitters
 }
 
