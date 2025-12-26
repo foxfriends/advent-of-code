@@ -2,7 +2,7 @@ import "trilogy:io" use readlines
 import "trilogy:debug" use dbg
 import "trilogy:iterator" use map, fold
 import "trilogy:string" use skip
-import "trilogy:parsec" use parse, integer
+import "trilogy:number" use parse_from_digits
 
 func combine [a] = "${a}${a}"
 func combine [a, .._, b] = "${a}${b}"
@@ -30,7 +30,7 @@ proc main!() {
     let total = readlines
         |> map digits
         |> map combine
-        |> map (parse integer)
+        |> map parse_from_digits
         |> fold (+) 0
     dbg!(total)
 }

@@ -11,8 +11,6 @@ import "trilogy:iterator" as it
 func target_state '.' = false
 func target_state '#' = true
 
-func set_bit bb index = set_at index bb
-
 proc machine!() {
   let target = bits::from_array
     <| map target_state
@@ -21,7 +19,7 @@ proc machine!() {
     <| many_1
     <| char_of ".#"
   apply <| char ' '
-  let buttons = map (fold set_bit (target ^ target))
+  let buttons = map (fold set_at (target ^ target))
     <| apply
     <| sep_by_1 (char ' ')
     <| between (char '(') (char ')')

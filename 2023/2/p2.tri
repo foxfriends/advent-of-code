@@ -3,13 +3,12 @@ import "trilogy:io" use readlines
 import "trilogy:compare" use max
 import "trilogy:array" use fold, flatten
 import "trilogy:iterator" as it
+import "trilogy:record" use update
 import "trilogy:parsec" use parse, apply, string, integer, char, sep_by_1, prefixed_by, choice
 
 slot init = {| "red" => 0, "green" => 0, "blue" => 0 |}
 
-func max_color {| "red" => best, ..cs |} n:"red" = {| "red" => max n best, ..cs |}
-func max_color {| "green" => best, ..cs |} n:"green" = {| "green" => max n best, ..cs |}
-func max_color {| "blue" => best, ..cs |} n:"blue" = {| "blue" => max n best, ..cs |}
+func max_color n:col rec = update (max n) 0 col rec
 
 func power {| "red" => r, "green" => g, "blue" => b |} = r * g * b
 

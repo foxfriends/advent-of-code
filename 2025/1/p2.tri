@@ -10,7 +10,7 @@ proc rotation!() {
   return if dir == 'R' then amt else -amt
 }
 
-func rotate pos amt = {
+func rotate amt pos = {
   let full = abs amt // 100
   let rotated = pos + amt % 100
   let crossed = rotated < 0 || rotated > 99

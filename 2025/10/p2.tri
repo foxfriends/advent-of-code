@@ -12,9 +12,7 @@ import "trilogy:iterator" as it
 func target_state '.' = false
 func target_state '#' = true
 
-func set_bit bb index = bb | (0bb1 ~~> index)
-
-func button_bits len button = fold set_bit (bits::init_zero len) button
+func button_bits len button = fold set_at (bits::init_zero len) button
 
 proc machine!() {
   let target = bits::from_array

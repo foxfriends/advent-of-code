@@ -19,6 +19,6 @@ proc main!() {
   let fresh:_ = readall!()
     |> parse input
     |> sort_by (asc <| fn a. a.'left)
-    |> fold (fn (fresh:index) (low:high). fresh + ((max index (high + 1)) - (max index low)):(max index (high + 1))) (0:0)
+    |> fold (fn (low:high) (fresh:index). fresh + ((max index (high + 1)) - (max index low)):(max index (high + 1))) (0:0)
   dbg!(fresh)
 }

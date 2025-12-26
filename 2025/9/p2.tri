@@ -29,34 +29,21 @@ proc main!() {
   let points = readlines
     |> it::map (parse (sep_by (char ',') integer))
     |> collect
-  dbg!('points(length points))
-
   let edges = zip points [..tail points, first points]
-  dbg!('edges(length edges))
 
   # It has been observed that the shape is convex and without holes or interior crossings
   #
   # So we can make a series of rectangles that represent the illegal area by sending beams
   # from each edge
   let verticals = sort_by (asc <| (x << left)) <| filter is_vertical edges
-  dbg!('verticals(length verticals))
-
   let horizontals = sort_by (asc <| (y << left)) <| filter is_horizontal edges
-  dbg!('horizontals(length horizontals))
-
   let xs = map (x << left) verticals
-  dbg!('xs(length xs))
-
   let ys = map (y << left) horizontals
-  dbg!('ys(length ys))
 
   let [min_x, .._, max_x] = xs
   let [min_y, .._, max_y] = ys
 
   let illegal = []
-
-  dbg!(min_x:max_x)
-  dbg!(min_y:max_y)
 
   let y_ranges = zip ys (tail ys)
   let mut i = 0
@@ -70,7 +57,6 @@ proc main!() {
     push!(illegal, [min_x, y1]:[x1, y2])
     push!(illegal, [x2, y1]:[max_x, y2])
   }
-  dbg!('illegal(length illegal))
 
   let x_ranges = zip xs (tail xs)
   let mut i = 0
@@ -84,7 +70,6 @@ proc main!() {
     push!(illegal, [x1, min_y]:[x2, y1])
     push!(illegal, [x1, y2]:[x2, max_y])
   }
-  dbg!('illegal(length illegal))
 
   # Then we just run standard collision of the area boxes with those
   let mut best = 0
