@@ -1,0 +1,35 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readline
+import "trilogy:parsec" use parse, prefixed_by, string, integer
+
+proc main!() {
+  let mut p1_position = (parse (prefixed_by (string "Player 1 starting position: ") integer) readline!()) - 1
+  let mut p2_position = (parse (prefixed_by (string "Player 2 starting position: ") integer) readline!()) - 1
+  let mut p1_score = 0
+  let mut p2_score = 0
+  let mut turn = true
+  let mut rolls = 0
+  let mut die = 1
+  let roll = do() {
+    let output = die
+    die += 1
+    rolls += 1
+    if (die > 100) {
+      die = 1
+    }
+    return output
+  }
+  while p1_score < 1000 && p2_score < 1000 {
+    let distance = roll!() + roll!() + roll!()
+    if turn {
+      p1_position = (p1_position + distance) % 10
+      p1_score += p1_position + 1
+    } else {
+      p2_position = (p2_position + distance) % 10
+      p2_score += p2_position + 1
+    }
+    turn = !turn
+  }
+  dbg!(rolls * if p1_score >= 1000 { p2_score } else { p1_score })
+  exit 0
+}
