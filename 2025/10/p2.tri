@@ -12,9 +12,7 @@ import "trilogy:iterator" as it
 func target_state '.' = false
 func target_state '#' = true
 
-func set_bit bb index = bb | (0bb1 ~~> index)
-
-func button_bits len button = fold set_bit (bits::init_zero len) button
+func button_bits len button = fold set_at (bits::init_zero len) button
 
 proc machine!() {
   let target = bits::from_array
@@ -65,7 +63,7 @@ proc solver!(buttons) {
       |> solve_bits buttons
       |> it::map (fn sol. fold apply_button joltage sol : length sol)
       |> it::filter (fn remaining:_. all (fn n. n >= 0) remaining)
-      |> it::flat_map (fn remaining:score. with it::of <| solve!(map (fn n. n // 2) remaining) * 2 + score when 'mia cancel (do() {}) else yield)
+      |> it::flat_map (fn remaining:score. with it::of <| solve!(map (fn n. n // 2) remaining) * 2 + score { when 'mia cancel (do() {}) })
       |> it::reduce min
     cache.(to_tuple joltage) = best
     return best
@@ -77,7 +75,6 @@ proc solver!(buttons) {
 proc main!() {
   readlines
   |> it::map (parse machine)
-  |> it::map (fn j:s. (dbg j; j:s))
   |> it::map (fn joltage:solve. solve!(joltage))
   |> it::map dbg
   |> it::fold (+) 0

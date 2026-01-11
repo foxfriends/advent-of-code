@@ -1,7 +1,7 @@
 import "trilogy:debug" use dbg
 import "trilogy:io" use readlines
 import "trilogy:string" use chars, chomp
-import "trilogy:number" use from_digit
+import "trilogy:number" use from_digit, from_digits_base
 import "trilogy:compare" use max
 import "trilogy:iterator" as it
 import "trilogy:array" as arr use take, skip
@@ -26,7 +26,7 @@ proc main!() {
       >> chars
       >> arr::map from_digit
       >> joltage
-      >> arr::fold (fn a b. a * 10 + b) 0
+      >> from_digits_base 10
     )
     |> it::sum
   dbg!(total)

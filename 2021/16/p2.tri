@@ -34,16 +34,16 @@ proc operator!() {
 proc packet!() {
   let version = from_binary <| apply <| repeat 3 any
   let type_id = from_binary <| apply <| repeat 3 any
-  return match type_id
+  return match type_id {
     case 0 then reduce (+) <| apply operator
     case 1 then reduce (*) <| apply operator
     case 2 then reduce min <| apply operator
     case 3 then reduce max <| apply operator
     case 4 then from_binary <| apply literal
-    case 5 then match apply operator case [a, b] if a > b then 1 else then 0
-    case 6 then match apply operator case [a, b] if a < b then 1 else then 0
-    case 7 then match apply operator case [a, b] if a == b then 1 else then 0
-    else then 'err
+    case 5 then match apply operator { case [a, b] if a > b then 1 else 0 }
+    case 6 then match apply operator { case [a, b] if a < b then 1 else 0 }
+    case 7 then match apply operator { case [a, b] if a == b then 1 else 0 }
+  }
 }
 
 proc main!() {

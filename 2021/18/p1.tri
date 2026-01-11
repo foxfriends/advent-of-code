@@ -62,7 +62,7 @@ func magnitude n = n
 proc main!() {
   readlines
   |> it::map (parse snailfish_number)
-  |> it::reduce (fn l r. snailfish_reduce (l:r))
+  |> it::reduce (fn r l. snailfish_reduce (l:r))
   |> magnitude
   |> dbg
 }

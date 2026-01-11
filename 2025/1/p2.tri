@@ -10,22 +10,23 @@ proc rotation!() {
   return if dir == 'R' then amt else -amt
 }
 
-func rotate pos amt =
-  let full = abs amt // 100,
-  let rotated = pos + amt % 100,
-  let crossed = rotated < 0 || rotated > 99,
-  yield 'rotations(full + if crossed then 1 else 0);
+func rotate amt pos = {
+  let full = abs amt // 100
+  let rotated = pos + amt % 100
+  let crossed = rotated < 0 || rotated > 99
+  yield 'rotations(full + if crossed then 1 else 0)
   (rotated + 100) % 100
+}
 
 proc main!() {
   let mut answer = 0
   with readlines
     |> it::map (parse rotation)
-    |> it::fold rotate 50
+    |> it::fold rotate 50 {
     when 'rotations(n) then {
       answer += n
       become unit
     }
-    else yield
+  }
   dbg!(answer)
 }

@@ -5,7 +5,7 @@ import "trilogy:grid" as grid
 import "trilogy:array" use map, filter
 import "trilogy:parsec" use parse, end_by, char, many, char_of
 
-func get g p = with g.p when 'mia cancel '.' else yield
+func get g p = with g.p { when 'mia cancel '.' }
 
 proc main!() {
   let rows = parse (end_by (char '\n') <| many <| char_of "@.") readall!()

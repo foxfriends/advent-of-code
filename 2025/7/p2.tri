@@ -4,13 +4,14 @@ import "trilogy:string" use split, chomp
 import "trilogy:number" use im
 import "trilogy:compare" use max
 import "trilogy:array" use map, reduce, length
+import "trilogy:record" use update
 import "trilogy:set" use push, contains, collect
 import "trilogy:iterator" as it
 
 proc collect_input!(it) {
   let mut start = unit
   let mut splitters = [||]
-  with it!()
+  with it!() {
     when 'next(pos:'S') then {
       start = pos
       become unit
@@ -20,7 +21,7 @@ proc collect_input!(it) {
       become unit
     }
     when 'next(_) resume unit
-    else yield
+  }
   return start:splitters
 }
 
@@ -39,7 +40,7 @@ proc main!() {
     beams = beams
       |> it::from
       |> it::flat_map (fn beam:val. if contains beam splitters then it::from [beam + 1 + 1i: val, beam - 1 + 1i: val] else it::of (beam + 1i:val))
-      |> it::fold (fn rec pos:val. {| ..rec, pos => val + with rec.pos when 'mia cancel 0 else yield |}) {||}
+      |> it::fold (fn pos:val rec. update ((+) val) 0 pos rec) {||}
     i += 1
   }
   dbg!(reduce (+) [val for _:val in beams])

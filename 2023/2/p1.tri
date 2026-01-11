@@ -1,29 +1,37 @@
-module io at "trilogy:io" use readlines, println
-module num at "trilogy:num" use cast
-module str at "trilogy:str" use split
-module array at "trilogy:array" use map, all
-module regex at "trilogy:regex"
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:array" use map, all
+import "trilogy:tuple" use left, right
+import "trilogy:iterator" as it
+import "trilogy:parsec" use parse, apply, string, integer, char, sep_by_1, prefixed_by, choice
 
-func valid {| 1 => n, 2 => "red", .._ |}   = cast n <= 12
-func valid {| 1 => n, 2 => "green", .._ |} = cast n <= 13
-func valid {| 1 => n, 2 => "blue", .._ |}  = cast n <= 14
+func valid n:"red"   = n <= 12
+func valid n:"green" = n <= 13
+func valid n:"blue"  = n <= 14
+
+proc draw!() {
+  let count = apply integer
+  apply <| char ' '
+  let color = apply <| choice [string "red", string "blue", string "green"]
+  return count:color
+}
+
+proc game!() {
+  apply <| string "Game "
+  let index = apply integer
+  apply <| string ": "
+  let draws = apply
+    <| sep_by_1 (string "; ")
+    <| sep_by_1 (string ", ")
+    <| draw
+  return index:draws
+}
 
 proc main!() {
-    let game_pattern = regex::new "Game (\\d+): (.*)"
-    let draw_pattern = regex::new "(\\d+) (green|red|blue)"
-    let mut total = 0
-    for line in readlines!() {
-        let game = game_pattern::matches line
-        let game_valid = game.2
-            |> split "; "
-            |> all (
-                split ", "
-                >> map (draw_pattern::matches)
-                >> all valid
-            )
-        if game_valid {
-            total += cast game.1
-        }
-    }
-    println!(total)
+    readlines
+    |> it::map <| parse game
+    |> it::filter <| all (all valid) << right
+    |> it::map left
+    |> it::reduce (+)
+    |> dbg
 }
