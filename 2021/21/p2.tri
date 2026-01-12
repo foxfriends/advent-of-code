@@ -1,0 +1,76 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readline
+import "trilogy:parsec" use parse, prefixed_by, string, integer
+import "trilogy:array" use push, pop
+import "trilogy:compare" use max, min, asc
+import "trilogy:heap" use heap
+
+proc dirac!(cb) {
+  with cb!() {
+    when 'roll {
+      resume 1
+      resume 2
+      resume 3
+      cancel unit
+    }
+  }
+}
+
+proc roll!() {
+  yield 'roll
+}
+
+func next_player (x:y:_:_:_) = min x y
+
+func cmp (ax:ay:_:_:_) (bx:by:_:_:_) = {
+  let amin = min ax ay
+  let amax = max ax ay
+  let bmin = min bx by
+  let bmax = max bx by
+  if amin == bmin then amax <= bmax else amin <= bmin
+}
+
+func asc_eq f a b = f a <= f b
+
+proc main!() {
+  let p1_start = (parse (prefixed_by (string "Player 1 starting position: ") integer) readline!()) - 1
+  let p2_start = (parse (prefixed_by (string "Player 2 starting position: ") integer) readline!()) - 1
+
+  let states = {| 0:0:p1_start:p2_start:true => 1 |}
+  let min_heap = heap cmp
+  let queue = [0:0:p1_start:p2_start:true]
+
+  let mut p1_wins = 0
+  let mut p2_wins = 0
+  while queue != [] {
+    let key = min_heap::pop!(queue)
+    let dups = states.key
+    using dirac
+    let distance = roll!() + roll!() + roll!()
+    let mut p1_score:mut p2_score:mut p1_position:mut p2_position:turn = key
+    if turn {
+      p1_position = (p1_position + distance) % 10
+      p1_score += p1_position + 1
+      if p1_score >= 21 {
+        p1_wins += dups
+        return unit
+      }
+    } else {
+      p2_position = (p2_position + distance) % 10
+      p2_score += p2_position + 1
+      if p2_score >= 21 {
+        p2_wins += dups
+        return unit
+      }
+    }
+    let new_key = p1_score:p2_score:p1_position:p2_position:!turn
+    with { states.new_key = dups + states.new_key } {
+      when 'mia {
+        min_heap::push!(queue, new_key)
+        become 0
+      }
+    }
+  }
+  dbg!(max p1_wins p2_wins)
+  exit 0
+}

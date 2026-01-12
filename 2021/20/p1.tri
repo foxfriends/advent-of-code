@@ -1,0 +1,55 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readline, readall
+import "trilogy:parsec" use parse, apply, repeat, char_of, per_line, many_1
+import "trilogy:array" as array use map
+import "trilogy:bits" as bits
+import "trilogy:number" as number
+import "trilogy:core" use length
+import "trilogy:iterator" as it
+
+func infinite_image true cb = with cb!() { when 'outside resume 0bb111 }
+func infinite_image false cb = with cb!() { when 'outside resume 0bb000 }
+
+proc read_at!(image, row, col) {
+  let outside = yield 'outside
+  let unpadded = with image.row { when 'mia { return outside } }
+  let padded = bits::concat outside <| bits::concat unpadded outside
+  return (padded <~ (col + 3)) ~>> (length padded - 3)
+}
+
+func read_around image row col = {
+  let a = read_at!(image, row - 1, col - 1)
+  let b = read_at!(image, row,     col - 1)
+  let c = read_at!(image, row + 1, col - 1)
+  number::from (a | b ~~> 3 | c ~~> 6)
+}
+
+func enhance_row enhancement image row =
+  it::range (-1) (length (image.0))
+  |> it::map (read_around image row)
+  |> it::map ((.) enhancement)
+  |> bits::collect
+
+func enhance outside enhancement image = {
+  using infinite_image outside
+  let enhanced = it::range (-1) (length image)
+    |> it::map (enhance_row enhancement image)
+    |> array::collect
+  let new_outside = enhancement.(read_around image (-3) (-3))
+  new_outside:enhanced
+}
+
+proc main!() {
+  let enhancement = readline!()
+    |> parse  (repeat 512 (char_of ".#"))
+    |> map ((==) '#')
+    |> bits::from_array
+  let "\n" = readline!()
+  let image = readall!()
+    |> parse (per_line (many_1 (char_of ".#")))
+    |> map (bits::from_array << map ((==) '#'))
+  let outside:enhanced = enhance false enhancement image
+  let _:enhanced_2 = enhance outside enhancement enhanced
+  dbg!(array::reduce (+) <| map bits::pop_count enhanced_2)
+  exit 0
+}
