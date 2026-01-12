@@ -1,0 +1,121 @@
+import "trilogy:io" use readline
+import "trilogy:debug" use dbg
+import "trilogy:iterator" as it
+import "trilogy:array" use collect, take, skip, length, all
+import "trilogy:heap" use heap
+import "trilogy:record" use contains_key
+import "trilogy:compare" use min
+
+slot GOAL = [
+  ['open, 'open, 'empty, 'open, 'empty, 'open, 'empty, 'open, 'empty, 'open, 'open],
+  ['A', 'A', 'A', 'A'],
+  ['B', 'B', 'B', 'B'],
+  ['C', 'C', 'C', 'C'],
+  ['D', 'D', 'D', 'D'],
+]
+
+func replace pos val array = [
+  ..take pos array,
+  val,
+  ..skip (pos + 1) array,
+]
+
+func cost 'A' = 1
+func cost 'B' = 10
+func cost 'C' = 100
+func cost 'D' = 1000
+
+proc eject!(value, position, depth, [spaces, ..stacks]) {
+  for pos in collect <| it::range position 10 {
+    match spaces.pos {
+      case 'open then yield 'next([replace pos value spaces, ..stacks]:cost value * (pos - position + depth))
+      case 'empty then continue unit
+      else break unit
+    }
+  }
+  for pos in collect <| it::range position 0 {
+    match spaces.pos {
+      case 'open then yield 'next([replace pos value spaces, ..stacks]:cost value * (position - pos + depth))
+      case 'empty then continue unit
+      else break unit
+    }
+  }
+}
+
+proc fall_in!(value, position, depth, [spaces, ..stacks]) {
+  for pos in collect <| it::range position 10 {
+    match spaces.pos {
+      case ^value then yield 'next([replace pos 'open spaces, ..stacks]:cost value * (pos - position + depth))
+      case 'empty then continue unit
+      case 'open then continue unit
+    }
+    break unit
+  }
+  for pos in collect <| it::range position 0 {
+    match spaces.pos {
+      case ^value then yield 'next([replace pos 'open spaces, ..stacks]:cost value * (position - pos + depth))
+      case 'empty then continue unit
+      case 'open then continue unit
+    }
+    break unit
+  }
+}
+
+func next_states [spaces, aa, bb, cc, dd] = do() {
+  match aa {
+    case ['A', 'A', 'A', 'A'] {}
+    case aas if all ((==) 'A') aas then fall_in!('A', 2, 4 - length aas, [spaces, [..aas, 'A'], bb, cc, dd])
+    case [..aas, v] then eject!(v, 2, 4 - length aas, [spaces, aas, bb, cc, dd])
+  }
+  match bb {
+    case ['C', 'C', 'C', 'C'] {}
+    case bbs if all ((==) 'B') bbs then fall_in!('B', 4, 4 - length bbs, [spaces, aa, [..bbs, 'B'], cc, dd])
+    case [..bbs, v] then eject!(v, 4, 4 - length bbs, [spaces, aa, bbs, cc, dd])
+  }
+  match cc {
+    case ['C', 'C', 'C', 'C'] {}
+    case ccs if all ((==) 'C') ccs then fall_in!('C', 6, 4 - length ccs, [spaces, aa, bb, [..ccs, 'C'], dd])
+    case [..ccs, v] then eject!(v, 6, 4 - length ccs, [spaces, aa, bb, ccs, dd])
+  }
+  match dd {
+    case ['D', 'D', 'D', 'D'] {}
+    case dds if all ((==) 'D') dds then fall_in!('D', 8, 4 - length dds, [spaces, aa, bb, cc, [..dds, 'D']])
+    case [..dds, v] then eject!(v, 8, 4 - length dds, [spaces, aa, bb, cc, dds])
+  }
+}
+
+proc main!() {
+  readline!()
+  readline!()
+  let upper = readline!()
+  let lower = readline!()
+  let initial = [
+    ['open, 'open, 'empty, 'open, 'empty, 'open, 'empty, 'open, 'empty, 'open, 'open],
+    [lower.3, 'D', 'D', upper.3],
+    [lower.5, 'B', 'C', upper.5],
+    [lower.7, 'A', 'B', upper.7],
+    [lower.9, 'C', 'A', upper.9],
+  ]
+  let min_heap = heap (fn _:a _:b. a <= b)
+  let queue = [initial:0]
+  let cache = {|"${initial}" => 0|}
+  while queue != [] {
+    let state:score = min_heap::pop!(queue)
+    if cache."${state}" < score {
+      continue unit
+    }
+    if state == GOAL {
+      dbg!(score)
+      exit 0
+    }
+    next_states state
+      |> it::map (fn state:cost. state:cost + score)
+      |> it::for_each do(entry and next_state:next_score) {
+        let key = "${next_state}"
+        if !(contains_key key cache) || cache.key > next_score {
+          cache.key = next_score
+          min_heap::push!(queue, entry)
+        }
+      }
+  }
+}
