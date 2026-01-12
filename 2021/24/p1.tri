@@ -1,0 +1,83 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readall, println
+import "trilogy:parsec" use parse, apply, per_line, choice, char, string, integer, followed_by, eof
+import "trilogy:array" use fold
+
+proc argument!() {
+  apply <| choice [
+    char 'w',
+    char 'x',
+    char 'y',
+    char 'z',
+    integer,
+  ]
+}
+
+proc instruction!() {
+  let op_code = apply <| choice [
+    string "inp",
+    string "add",
+    string "mul",
+    string "div",
+    string "mod",
+    string "eql",
+  ]
+  apply <| char ' '
+  match op_code {
+    case "inp" then 'inp(apply argument)
+    case "add" then 'add(apply (followed_by (char ' ') argument):apply argument)
+    case "mul" then 'mul(apply (followed_by (char ' ') argument):apply argument)
+    case "div" then 'div(apply (followed_by (char ' ') argument):apply argument)
+    case "mod" then 'mod(apply (followed_by (char ' ') argument):apply argument)
+    case "eql" then 'eql(apply (followed_by (char ' ') argument):apply argument)
+  }
+}
+
+proc countdown!(cb) {
+  with cb!() {
+    when 'inp then {
+      for option in [9, 8, 7, 6, 5, 4, 3, 2, 1] {
+        match resume option {
+          case 'some(val) then cancel 'some("${option}${val}")
+        }
+      }
+      cancel 'none
+    }
+  }
+}
+
+func set 'w' w [_, x, y, z] = [w, x, y, z]
+func set 'x' x [w, _, y, z] = [w, x, y, z]
+func set 'y' y [w, x, _, z] = [w, x, y, z]
+func set 'z' z [w, x, y, _] = [w, x, y, z]
+
+func get val and typeof 'number _ = val
+func get 'w' [w, _, _, _] = w
+func get 'x' [_, x, _, _] = x
+func get 'y' [_, _, y, _] = y
+func get 'z' [_, _, _, z] = z
+
+func apply_instruction _ 'none = 'none
+func apply_instruction 'inp(var) 'some(state) = 'some(set var (yield 'inp) state)
+func apply_instruction 'add(var:rhs) 'some(state) = 'some(set var (get var state + get rhs state) state)
+func apply_instruction 'mul(var:rhs) 'some(state) = 'some(set var (get var state * get rhs state) state)
+func apply_instruction 'div(var:rhs) 'some(state) = 'some(set var (get var state // get rhs state) state)
+func apply_instruction 'mod(var:rhs) 'some(state) = 'some(set var (get var state % get rhs state) state)
+func apply_instruction 'eql(var:rhs) 'some(state) = 'some(set var (if get var state == get rhs state then 1 else 0) state)
+
+func evaluate program state = fold (fn i s. apply_instruction i s) 'some(state) program
+
+func maybe option cb = match option {
+  case 'some(val) then cb val
+  else 'none
+}
+
+proc main!() {
+  let program = parse (followed_by eof <| per_line instruction) readall!()
+  let 'some(result) = {
+    using countdown
+    do(state) using maybe (evaluate program [0, 0, 0, 0])
+    if get 'z' state == 0 then 'some("") else 'none
+  }
+  println!(result)
+}
