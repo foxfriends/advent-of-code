@@ -1,0 +1,11 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readline
+import "trilogy:string" use chars
+import "trilogy:array" use fold
+
+proc main!() {
+  readline!()
+  |> chars
+  |> fold (fn c a. if c == '(' then a + 1 else a - 1) 0
+  |> dbg
+}

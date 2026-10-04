@@ -1,0 +1,24 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:parsec" use apply, parse, integer, char
+import "trilogy:iterator" as it
+import "trilogy:compare" use min
+
+proc box!() {
+  let l = apply integer
+  apply <| char 'x'
+  let w = apply integer
+  apply <| char 'x'
+  let h = apply integer
+  let a = (l + w) * 2
+  let b = (l + h) * 2
+  let c = (h + w) * 2
+  return (min a <| min b c) + l * w * h
+}
+
+proc main!() {
+  readlines
+  |> it::map (parse box)
+  |> it::sum
+  |> dbg
+}

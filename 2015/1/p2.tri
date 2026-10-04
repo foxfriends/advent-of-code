@@ -1,0 +1,15 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readline
+import "trilogy:tuple" use left
+import "trilogy:iterator" use from, scan, enumerate, find
+
+proc main!() {
+  readline!()
+  |> from
+  |> scan (fn a c. if c == '(' then a + 1 else a - 1) 0
+  |> enumerate
+  |> find (fn a:b. b < 0)
+  |> left
+  |> (+) 1
+  |> dbg
+}

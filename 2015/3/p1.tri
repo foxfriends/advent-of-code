@@ -1,0 +1,22 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readline
+import "trilogy:iterator" as it
+import "trilogy:set" as set
+import "trilogy:string" use chomp
+import "trilogy:core" use length
+
+func move p '^' = p + 1i
+func move p 'v' = p - 1i
+func move p '>' = p + 1
+func move p '<' = p - 1
+
+proc main!() {
+  readline!()
+  |> chomp
+  |> it::from
+  |> it::scan move 0
+  |> set::collect
+  |> set::union [| 0 |]
+  |> length
+  |> dbg
+}

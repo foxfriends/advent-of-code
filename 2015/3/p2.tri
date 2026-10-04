@@ -1,0 +1,28 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readline
+import "trilogy:iterator" as it
+import "trilogy:set" as set
+import "trilogy:string" use chomp
+import "trilogy:tuple" use map_left, map_right
+import "trilogy:core" use length
+
+func move p (1:c) = map_right (move_ c) p
+func move p (0:c) = map_left (move_ c) p
+
+func move_ '^' p = p + 1i
+func move_ 'v' p = p - 1i
+func move_ '>' p = p + 1
+func move_ '<' p = p - 1
+
+proc main!() {
+  readline!()
+  |> chomp
+  |> it::from
+  |> it::enumerate
+  |> it::map (map_left (fn n. n % 2))
+  |> it::scan move (0:0)
+  |> it::flat_map (fn a:b. it::from [a, b])
+  |> set::collect
+  |> length
+  |> dbg
+}
