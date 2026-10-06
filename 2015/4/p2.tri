@@ -1,0 +1,17 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readline
+import "trilogy:crypto" use md5
+import "trilogy:bits" as bits
+import "trilogy:core" use slice
+
+proc main!() {
+  let input <> "\n" = readline!()
+  let mut i = 0
+  while true {
+    if md5!(bits::from <| "${input}${i}") ~>> 100 == 0bx000000 {
+      dbg!(i)
+      exit 0
+    }
+    i += 1
+  }
+}

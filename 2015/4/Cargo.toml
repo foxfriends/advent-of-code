@@ -1,0 +1,15 @@
+[package]
+name = "day4"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "p1"
+path = "p1.rs"
+
+[[bin]]
+name = "p2"
+path = "p2.rs"
+
+[dependencies]
+md5 = "0.8.1"

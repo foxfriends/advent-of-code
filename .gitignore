@@ -20,3 +20,5 @@ META-INF
 *.tasty
 .bsp
 .scala-build
+target/
+Cargo.lock
