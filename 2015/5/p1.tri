@@ -1,0 +1,33 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:iterator" as it
+import "trilogy:string" use chars
+import "trilogy:array" as array
+import "trilogy:core" use length
+
+func is_vowel 'a' = true
+func is_vowel 'e' = true
+func is_vowel 'i' = true
+func is_vowel 'o' = true
+func is_vowel 'u' = true
+func is_vowel _ = false
+
+func contains_double [_] = false
+func contains_double [x, x, .._] = true
+func contains_double [_, ..rest] = contains_double rest
+
+func not_contains_forbidden [_] = true
+func not_contains_forbidden ['a', 'b', .._] = false
+func not_contains_forbidden ['c', 'd', .._] = false
+func not_contains_forbidden ['p', 'q', .._] = false
+func not_contains_forbidden ['x', 'y', .._] = false
+func not_contains_forbidden [_, ..rest] = not_contains_forbidden rest
+
+proc main!() {
+  readlines
+  |> it::filter (chars >> array::filter is_vowel >> length >> (<=) 3)
+  |> it::filter (chars >> contains_double)
+  |> it::filter (chars >> not_contains_forbidden)
+  |> it::count
+  |> dbg
+}
