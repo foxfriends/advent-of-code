@@ -8,7 +8,7 @@ proc main!() {
   let input <> "\n" = readline!()
   let mut i = 0
   while true {
-    if md5!(bits::from <| "${input}${i}") ~>> 100 == 0bx000000 {
+    if md5!(bits::from <| "${input}${i}") ~>> 104 == 0bx000000 {
       dbg!(i)
       exit 0
     }
