@@ -1,0 +1,38 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:iterator" as it
+import "trilogy:parsec" use apply, parse, integer, char, choice, string
+import "trilogy:bits" use concat, pop_count
+import "trilogy:core" use length
+
+proc instruction!() {
+  let action = apply <| choice [string "turn on", string "toggle", string "turn off"]
+  apply <| char ' '
+  let sx = apply integer
+  apply <| char ','
+  let sy = apply integer
+  apply <| string " through "
+  let dx = 1 + apply integer
+  apply <| char ','
+  let dy = 1 + apply integer
+
+  let grid = (0bb ~~> 1_000) | (~(0bb ~~> dx - sx) ~~> sx)
+    |> it::repeat (dy - sy)
+    |> it::fold (fn p a. concat a p) (0bb ~~> 1_000 * sy)
+
+  return match action {
+    case "turn on" then (|) grid
+    case "toggle" then (^) grid
+    case "turn off" then (&) ~(grid <~~ 1_000_000 - length grid)
+  }
+}
+
+proc main!() {
+  let grid = 0bb ~~> 1_000_000
+
+  readlines
+  |> it::map (parse instruction)
+  |> it::fold (<|) grid
+  |> pop_count
+  |> dbg
+}
