@@ -11,7 +11,7 @@ current_day := replace_regex(relative, "^/\\d+/(\\d+)$|.*", "$1")
 
 default_year := if current_year != "" { current_year } else { env_year }
 
-llvm_prefix := env("LLVM_SYS_221_PREFIX", "")
+llvm_prefix := env("LLVM_SYS_211_PREFIX", "")
 clang := if llvm_prefix == "" { "clang" } else { llvm_prefix / "bin/clang" }
 
 

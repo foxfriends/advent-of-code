@@ -1,0 +1,24 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:iterator" as it
+import "trilogy:string" use chars, chomp
+
+func contains_aba [_, _] = false
+func contains_aba [a, b, a, .._] = true
+func contains_aba [_, ..rest] = contains_aba rest
+
+func contains_exactly _ [_] = false
+func contains_exactly (a:b) [a, b, .._] = true
+func contains_exactly p [_, ..rest] = contains_exactly p rest
+
+func contains_double [_, _, _] = false
+func contains_double [a, b, ..rest] = contains_exactly (a:b) rest || contains_double [b, ..rest]
+
+proc main!() {
+  readlines
+  |> it::map chomp
+  |> it::filter (chars >> contains_aba)
+  |> it::filter (chars >> contains_double)
+  |> it::count
+  |> dbg
+}
