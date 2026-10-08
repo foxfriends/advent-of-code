@@ -28,11 +28,9 @@ proc instruction!() {
 }
 
 proc main!() {
-  let grid = 0bb ~~> 1_000_000
-
   readlines
   |> it::map (parse instruction)
-  |> it::fold (<|) grid
+  |> it::fold (<|) (0bb ~~> 1_000_000)
   |> pop_count
   |> dbg
 }

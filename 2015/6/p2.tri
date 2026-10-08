@@ -1,0 +1,58 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:iterator" as it
+import "trilogy:array" as array
+import "trilogy:parsec" use apply, parse, integer, char, choice, string
+import "trilogy:bits" use concat, pop_count
+import "trilogy:core" use length
+
+proc instruction!() {
+  let action = apply <| choice [string "turn on", string "toggle", string "turn off"]
+  apply <| char ' '
+  let s = apply integer
+  apply <| char ','
+  let y1 = apply integer
+  apply <| string " through "
+  let e = 1 + apply integer
+  apply <| char ','
+  let y2 = 1 + apply integer
+
+  let f = match action {
+    case "turn on" then (+) 1
+    case "toggle" then (+) 2
+    case "turn off" then (fn n. if n > 0 then n - 1 else 0)
+  }
+
+  return f:y1:y2:s:e
+}
+
+func toggle c _ e [] = [e:c]
+func toggle c f e [e:v, ..rest] if f c == v = rest
+func toggle _ _ e arr and [e:v, .._] = arr
+func toggle c f e [p:v, ..rest] if e > p && f c == f v = toggle v f e rest
+func toggle c f e [p:v, ..rest] if e > p = [p:f v, ..toggle v f e rest]
+func toggle c _ e [_:c, ..rest] = [e:c, ..rest]
+func toggle c _ e rest = [e:c, ..rest]
+
+func begin f s e [p:v] if p < s = [p:v, s:f v, e:v]
+func begin f s e [s:v, ..rest] = [s:f v, ..toggle v f e rest]
+func begin f s e [p:v1, n:v2, ..rest] if p < s && n > s = [p:v1, s:f v1, ..toggle v1 f e <| [n:v2, ..rest]]
+func begin f s e [p, ..rest] = [p, ..begin f s e rest]
+
+func apply_instruction_ (f:y1:y2:s:e) grid = begin (fn row. begin f s e row) y1 y2 <| grid
+
+func score [_] = 0
+func score [a:a_v, b:b_v, ..rest] = (b - a) * a_v + score [b:b_v, ..rest]
+
+func score_ [_] = 0
+func score_ [a:a_v, b:b_v, ..rest] = (b - a) * score a_v + score_ [b:b_v, ..rest]
+
+proc main!() {
+  let grid = [0:[0:0]]
+
+  readlines
+  |> it::map (parse instruction)
+  |> it::fold apply_instruction_ grid
+  |> score_
+  |> dbg
+}
