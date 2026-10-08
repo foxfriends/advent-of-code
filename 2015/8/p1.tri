@@ -1,0 +1,24 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:iterator" as it
+import "trilogy:string" use chomp
+import "trilogy:parsec" use apply, parse, many, char, choice, seq, string, any, hex_digit
+import "trilogy:core" use length
+
+proc quoted_string!() {
+  let ['"', ..output, '"'] = apply <| many <| choice [
+    seq [string "\\x", hex_digit, hex_digit],
+    string "\\\"",
+    string "\\\\",
+    any,
+  ]
+  return output
+}
+
+proc main!() {
+  readlines
+  |> it::map chomp
+  |> it::map (fn input. (length input) - (length <| parse quoted_string input))
+  |> it::sum
+  |> dbg
+}

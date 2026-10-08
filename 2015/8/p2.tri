@@ -1,0 +1,18 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:iterator" as it
+import "trilogy:string" use chomp, skip
+import "trilogy:core" use length
+
+func enquote "" = 0
+func enquote "\"" <> str = 2 + enquote str
+func enquote "\\" <> str = 2 + enquote str
+func enquote str = 1 + enquote (skip 1 str)
+
+proc main!() {
+  readlines
+  |> it::map chomp
+  |> it::map (fn input. 2 + enquote input - length input)
+  |> it::sum
+  |> dbg
+}
