@@ -1,0 +1,89 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:iterator" as it
+import "trilogy:record" as rec
+import "trilogy:bits" as bits
+import "trilogy:number" as num
+import "trilogy:parsec" use apply, parse, integer, word, choice, string, map
+import "trilogy:core" use length, slice
+
+func to_16_bits n =
+  let b = bits::from n,
+  let l = length b,
+  b <<~ l - 16
+
+proc input!() {
+  return apply <| choice [map to_16_bits integer, word]
+}
+
+proc op_and!() {
+  let a = apply input
+  apply <| string " AND "
+  let b = apply input
+  return 'and(a : b)
+}
+
+proc op_or!() {
+  let a = apply input
+  apply <| string " OR "
+  let b = apply input
+  return 'or(a : b)
+}
+
+proc op_lsh!() {
+  let a = apply input
+  apply <| string " LSHIFT "
+  let b = apply integer
+  return 'lsh(a : b)
+}
+
+proc op_rsh!() {
+  let a = apply input
+  apply <| string " RSHIFT "
+  let b = apply integer
+  return 'rsh(a : b)
+}
+
+proc op_not!() {
+  apply <| string "NOT "
+  let a = apply input
+  return 'not(a)
+}
+
+proc op_const!() {
+  return 'const(apply input)
+}
+
+proc wire!() {
+  let op = apply <| choice [op_and, op_or, op_lsh, op_rsh, op_not, op_const]
+  apply <| string " -> "
+  let c = apply <| word
+  return c:op
+}
+
+func memo f a b =
+  let cache = {||},
+  let memoized = (fn a b. with cache.a {
+    when 'mia then {
+      cache.a = f memoized a b
+      become cache.a
+    }
+  }),
+  memoized a b
+
+func eval _ v and typeof 'bits _ = v
+func eval f w {| ^w => 'const(v), ..wires |} = f v wires
+func eval f w {| ^w => 'and(a:b), ..wires |} = f a wires & f b wires
+func eval f w {| ^w => 'or(a:b),  ..wires |} = f a wires | f b wires
+func eval f w {| ^w => 'not(v),   ..wires |} = ~(f v wires)
+func eval f w {| ^w => 'lsh(v:n), ..wires |} = f v wires <~ n
+func eval f w {| ^w => 'rsh(v:n), ..wires |} = f v wires ~> n
+
+proc main!() {
+  let wires = readlines
+    |> it::map (parse wire)
+    |> rec::collect;
+  let b = memo eval "a" wires
+  dbg!(num::from <| memo eval "a" {| ..wires, "b" => 'const(b) |})
+  return 0
+}
