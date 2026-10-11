@@ -1,0 +1,66 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:iterator" as it
+import "trilogy:record" as rec
+import "trilogy:tuple" use right, left, map_right, both
+import "trilogy:set" as set
+import "trilogy:array" as array
+import "trilogy:parsec" use apply, parse, integer, word, string
+import "trilogy:core" use length
+import "trilogy:compare" use max
+
+proc route!() {
+  let src = apply word
+  apply <| string " to "
+  let dest = apply word
+  apply <| string " = "
+  let dist = apply integer
+  return it::from [src:dest:dist, dest:src:dist]
+}
+
+func insert pos unit = pos:unit
+func insert pos a:rest if pos < a = pos:a:rest
+func insert pos a:rest = a:insert pos rest
+
+func contains _ unit = false
+func contains pos ^pos:_ = true
+func contains pos _:rest = contains pos rest
+
+proc main!() {
+  let paths = readlines
+    |> it::flat_map (parse route)
+    |> rec::group
+  let all_locations = paths
+    |> it::from
+    |> it::map left
+    |> set::collect
+    |> it::from
+    |> array::collect
+  let mut partials = {| (loc:unit):loc => 0 for loc in all_locations |}
+  let mut len = 1
+  while len < length all_locations {
+    let new_partials = {||}
+    for
+      (visited:last):existing_dist in partials
+      and to:dist in paths.last
+      and not is contains to visited
+    {
+      let full_path = (insert to visited):to
+      let new_dist = existing_dist + dist
+      new_partials.full_path = with {
+        if new_partials.full_path > new_dist
+          then new_partials.full_path
+          else new_dist
+      } {
+        when 'mia cancel new_dist
+      }
+    }
+    len += 1
+    partials = new_partials
+  }
+  let mut best = 0
+  for _:answer in partials {
+    best max= answer
+  }
+  dbg!(best)
+}

@@ -1,0 +1,51 @@
+import "trilogy:debug" use dbg
+import "trilogy:io" use readlines
+import "trilogy:iterator" as it
+import "trilogy:record" as rec
+import "trilogy:tuple" use right, both
+import "trilogy:set" as set
+import "trilogy:array" as array
+import "trilogy:parsec" use apply, parse, integer, word, string
+import "trilogy:core" use length
+
+proc route!() {
+  let src = apply word
+  apply <| string " to "
+  let dest = apply word
+  apply <| string " = "
+  let dist = apply integer
+  return it::from [dist:src:dest, dist:dest:src]
+}
+
+proc main!() {
+  let paths = readlines
+    |> it::flat_map (parse route)
+    |> rec::group
+  let all_locations = paths
+    |> it::from
+    |> it::flat_map (right >> it::from)
+    |> it::flat_map both
+    |> set::collect
+    |> it::from
+    |> array::collect
+  let mut partials = {| [loc] => 0 for loc in all_locations |}
+  let mut distance = 1
+  while distance < 10_000 { # safety
+    for (([.._, last] and path):len) in partials {
+      let distance_remaining = distance - len
+      let skip = (continue)
+      for
+        ^last:to in with paths.distance_remaining { when 'mia then skip 0 }
+        and not ^to in path
+      {
+        let full_path = [..path, to]
+        if length full_path == length all_locations {
+          dbg!(distance)
+          exit 0
+        }
+        partials.full_path = distance
+      }
+    }
+    distance += 1
+  }
+}
